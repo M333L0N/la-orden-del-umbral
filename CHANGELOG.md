@@ -4,9 +4,145 @@ Formato: la sección **En curso** se actualiza mientras se trabaja. El comando �
 
 ## En curso
 
+_(Sin cambios desde v0.2.0.)_
+
+## v0.2.0 — 2026-11-20 — Cerrada
+
+Punto de partida: v0.1.0.
+
+### Informe de cierre
+
+````markdown
+# La Orden del Umbral — v0.2.0 — 2026-11-20
+Estado: Cerrada
+
+## Qué se puede jugar ahora
+Juego incremental de navegador en español: HTML, CSS y JS nativos que abren con doble clic, con pixel art propio en Canvas. Tres magos trabajan en paralelo, cada uno con su moneda y 8 entradas de tienda: el aprendiz astral del Bosque del Velo, la herborista de poda de la Jungla de las Mil Bocas y la maga de la Cripta de las Campanas. Una «Sala de la Orden» los muestra a la vez a través de portales vivos. Mejoras de la orden conectan las zonas en una sola dirección. Se puede refundar a cambio de Ecos y elegir entre 5 talentos permanentes. Las partidas de la v0.1 se migran conservando su progreso.
+
+## Cambios y arreglos
+- **Sala de la Orden** (botón fijo y tecla S).
+  - Un portal por zona abierta, con una versión simplificada y animada de su escena real.
+  - Junto a cada portal: nombre, saldo, producción media y próximo hito. Al pulsarlo se entra en la vista detallada; las compras se hacen dentro.
+  - Una partida nueva abre en el bosque; después se recuerda la última vista, incluida la Sala. En móvil los portales se apilan.
+  - El portal y la vista detallada comparten estado: un pulso ocurrido con la Sala abierta se ve al entrar. Cambiar de vista u ocultar la pestaña no acredita producción.
+- **Tercera zona: Jungla de las Mil Bocas.** Se descubre con 80/s automáticos en el bosque, entre la primera evolución y la cripta; en pantalla aparece entre ambas.
+  - La herborista marca raíces con la mano libre. Su grimorio flotante poda solo.
+  - Cada 5 podas o marcas, la secuencia de raíces visible en el suelo florece con más valor. La Reina Injerto, una flor parasitaria, abre sus bocas.
+  - Funciona en paralelo y offline.
+- **8 entradas por mago (24)**: foco, túnica, tocado, accesorio y 4 hechizos o rituales.
+  - Se descubren de forma gradual, anunciando la condición.
+  - Bosque: Capucha de Astrónomo, Órbita Gemela, Prisma del Velo y Constelación del Ciervo.
+  - Cripta: Vestidura de Vigilia, Mitra del Último Eco, Medallón Funerario, Incienso de Vigilia y Letanía de la Corona.
+  - Se conservan los IDs, niveles y efectos de la v0.1.
+- **Evolución visual separada de la económica.** Formas en Nv 0, 10, 50, 100, 150, 200 y 250 (tope artístico); los saltos económicos siguen en 10, 50, 100 y cada 50.
+  - Los hechizos cambian en movimiento, con trayectoria, forma, impacto o reacción de la amenaza. Ejemplo, la Lluvia: chispa → cometa curvo → se parte → fragmentos convergentes → constelación tras el cristal → segunda oleada → eclipse que revela al Ciervo.
+  - Los focos cambian cómo canalizan; túnica y tocado evolucionan por separado y se ven sobre el personaje.
+  - La apariencia se calcula desde el nivel real: un báculo Nv 70 importado se ve como Nv 50.
+- **Mano libre.** El lanzamiento manual nace de la mano libre con un gesto visible y se distingue del ataque automático del foco.
+- **Amenazas solo visuales.** El Ciervo Hueco (bosque), la Reina Injerto (jungla) y el Rey sin Réquiem (cripta) reaccionan a la magia sin daño ni barras de vida.
+- **Maestría de Chispa (cosmética).** Estela bifurcada, trenzada y halo de estrellas, ganados con chispas automáticas mientras se ahorra. Se conserva al refundar.
+- **Tienda en filas compactas.**
+  - Ordenada por precio: ×1 por el próximo nivel; ×10 por el lote real (recortado si llega al tope); Máx por el próximo nivel, con el total en el botón. Los completados van al final.
+  - El orden no cambia bajo el cursor ni con el foco dentro. Las teclas 1–8 van ligadas a cada objeto y se ven en la fila.
+  - El detalle desplegable muestra el próximo hito visual con una pista, o «Forma final alcanzada».
+  - La vista previa muestra el valor indirecto, por ejemplo «+136/s · cripta +272/pulso».
+- **Mejoras de la orden.** Se suman Polen Astral (Lluvia del bosque → cada floración) y Raíz Estelar (producción de la jungla → cada descarga de la Órbita). Cada aporte lee la producción propia de su zona de origen, así que no se retroalimenta.
+- **Talentos.** Se suman Semilla de la Fundadora (la jungla reabre con una raíz madura; floraciones +50 %) y Cielo Recordado (los 4 hechizos del bosque visibles desde el inicio, +50 %; maestría ×2). Cada talento dice qué cambiará en la próxima partida.
+- **Refundar** muestra el aporte de cada zona.
+- **«Empezar desde cero»** (Partida), separado de refundar: advierte de que se pierden Ecos y talentos, ofrece exportar y exige marcar una casilla.
+- **Migración v0.1 → v0.2.**
+  - Antes de sobrescribir guarda una copia exacta del original, exportable.
+  - Si no puede guardar esa copia, no sobrescribe el original.
+  - Ante un guardado que no se puede migrar, ofrece exportarlo o empezar de nuevo.
+  - El tiempo offline previo a la actualización no genera contenido nuevo.
+  - No concede Ecos.
+- **Arreglos durante la versión:**
+  - Antes, en v0.1, el Círculo de Tiza anunciaba un hito en Nv 50 que nunca alcanzaba. Ahora culmina con su forma final en su tope real (Nv 24) y la tienda solo anuncia hitos alcanzables.
+  - Los efectos nacidos al impactar (constelación, prisma, chispas) se perdían y un cuadro tardío saltaba el impacto de la Lluvia. Ahora se conservan y el impacto se dispara siempre.
+  - La tienda podía reordenarse bajo el cursor tras una actualización. Ahora conserva el orden visible.
+  - El detalle de una fila se abría vacío hasta el siguiente refresco. Ahora muestra el contenido al abrirse.
+- **Proyecto:** se añadió `.gitignore` (partidas exportadas, capturas e instrucciones locales de Claude Code). El código vive en un repositorio privado de GitHub. Se revisó que no contiene datos del equipo.
+
+## Balance y decisiones
+- **Objetivos de diseño:** cripta en 10–20 min y primer prestigio en 35–60 min; la jungla debe aparecer entre la primera evolución y la cripta.
+- **Tiempos simulados** (estrategia: 1 clic/s hasta el primer foco de cada zona; cada 20 s compra lo de mejor coste / aumento de producción, valorando ½ el aporte a otras zonas), v0.1 → v0.2:
+
+  | Hito | v0.1 | v0.2 |
+  |---|---|---|
+  | Primer báculo | 0:12 | 0:12 |
+  | Primera evolución | 3:40 | 3:40 |
+  | Jungla | — | 5:20 |
+  | Grimorio y primera floración | — | 5:25 |
+  | Cripta | 13:40 | 11:40 |
+  | Confluencia | 15:20 | 15:20 |
+  | Primer prestigio | 48:03 | 39:36 |
+
+- **Segunda partida (simulada):** Báculos heredados 33:16, Cielo Recordado 33:43, Campanas eternas 34:21, Semilla de la Fundadora 36:42. Los talentos compiten entre sí.
+- **Tiempos observados jugando:** todavía no hay.
+- **Cambios de valores:**
+  - Meta de refundación: 60 M → 1 000 M de maná generado. Con 3 zonas y 24 entradas, 60 M se alcanzaba hacia los 15 min. Las partidas migradas conservan su maná generado, pero la meta queda más lejos.
+  - La savia de la jungla cuenta ×0,5 en el total. Aporte simulado en la primera refundación: bosque 51 M, jungla 185 M (ya ponderada) y cripta 1542 M.
+  - Anillo: crecimiento ×1,7 → ×1,6. En la v0.1 dejaba de convenir hacia el Nv 13–14: su recuperación pasaba de ~670 s en Nv 10 a ~5600 s en Nv 14, por encima de la Lluvia (~1500 s). En la simulación v0.2 llega al Nv 18 (antes 15).
+- **Jungla:** umbral de 80/s.
+  - La Flor de las Mil Bocas suma +400 fijos por floración y nivel, en lugar de multiplicar: con multiplicadores encadenados, la jungla llegaba a 12 M/s a los 8 min.
+  - Crecimientos de coste de ×1,3 a ×2,0.
+- **Cielo Recordado** no regala la Lluvia: con ella gratis, la jungla se abría en el segundo 0.
+- **Bosque mientras se ahorra:**
+  - Compras: 122 en 50 min (v0.1) → 210 hasta el prestigio (v0.2).
+  - Tramo 19:00–22:20: de 0 compras (esperando el anillo 8) a 21 de 8 tipos.
+  - Tramo 13:40–16:20: de 0 compras a 7, más la evolución de la Lluvia y la maestría de Chispa II.
+  - Hueco más largo: 240 s → 220 s, esperando Confluencia Nv 4, una gran compra deliberada.
+- Las 24 entradas se compran en 70 min de juego normal simulado. Las últimas en aparecer: Constelación 24:00, Letanía y Prisma 20:20.
+
+## Verificación
+- **Prueba de lógica** (Node, `tests/logic.test.js`): **111/111**. Cubre:
+  - catálogo de 8 entradas por zona;
+  - compras ×10 y Máx con topes;
+  - límites visuales 9/10/11 y 249/250/251, y la tiza en 23/24;
+  - ciclos de jungla: jugar activo da lo mismo que offline, y la recarga a mitad de ciclo continúa;
+  - mejoras cruzadas sin retroalimentación ni dobles cobros;
+  - migración con guardados v0.1 reales generados con el código v0.1 (Campana, Círculo de Tiza, Báculos heredados, fase de pulso, sin Ecos extra, sin floraciones ni maestría retroactivas, sin repetirse);
+  - validación de importaciones y offline de 8 h;
+  - prestigio con tres zonas y talentos nuevos.
+- **Prueba en navegador real** (Chrome headless sobre `file://`, pulsando botones y teclas): **63/63**, con tres recargas reales de la página. Cubre:
+  - tienda ordenada, orden congelado bajo el cursor y atajos;
+  - Sala y portales, y la coherencia de un pulso entre portal y detalle;
+  - ninguna producción extra al cambiar de vista;
+  - jungla y cripta, Confluencia con vista previa por pulso;
+  - refundar con tres zonas;
+  - «Empezar desde cero» cancelado, sin casilla y confirmado;
+  - migración real desde v0.1 con copia exacta y segunda recarga sin duplicar;
+  - pulso tras recarga, offline de 8 h, movimiento reducido y guardado bloqueado.
+- **Capturas y hojas de contacto** (Chrome headless, revisadas a mano):
+  - Sala en escritorio (3 portales) y en 360 px.
+  - Zonas en varios niveles; forma final del Círculo de Tiza.
+  - Hojas de 7 estados × varios cuadros de Lluvia, Órbita, Hoja de Siega y Campana.
+
+  Los cuadros se fuerzan desde la prueba: prueban el render, no la fluidez.
+- **Sin comprobar:**
+  - fluidez real con muchos efectos y la Sala abierta durante minutos;
+  - Edge, Firefox y un móvil real;
+  - revisión detallada de las hojas de las otras 20 entradas (se generan con `node tools/browser.js <carpeta> --solo-tiras`).
+
+## Qué conviene probar jugando
+1. **Con tu partida migrada, abre la Sala (S) y míralo un minuto.** ¿Se reconoce cada mago, su foco y su hechizo a través del portal? ¿Es agradable dejarlo de fondo?
+2. **Desde cero, juega hasta la cripta.** ¿La jungla da algo que hacer mientras el bosque trabaja? ¿Se nota la estela bifurcada de la maestría mientras ahorras?
+3. **Compra ×10 de la Lluvia (o de un hechizo) que cruce el Nv 10 o el 50 y mírala caer varias veces.** ¿El cambio de trayectoria se distingue a tamaño normal o solo se nota en el nombre?
+
+## Pendientes conocidos
+- La meta de refundación subió a 1 000 M: las partidas migradas desde v0.1 tardarán más en volver a refundar. Valorarlo con tiempos observados.
+- Personajes de 16×24 px en escenas de 256×144: su legibilidad sigue pendiente de criterio humano.
+- Con 4 hechizos activos la escena del bosque puede saturarse; el límite de partículas es una protección, no está ajustado con observación real.
+- El Tocado de Espinas y el Círculo de Tiza solo tienen 3 formas (inicial, 10 y tope), por su tope mecánico.
+- En pantallas menores de 512 px la escena y los portales se escalan a tamaño no entero.
+- No hay sonido (fuera de alcance en esta versión).
+````
+
+### Notas de desarrollo de esta versión
+
 Objetivo: v0.2.0, una expansión jugable completa. Incluye la Sala de la Orden, la tercera zona, 8 entradas por mago, hechizos que evolucionan en movimiento, nuevas mejoras de la orden y talentos, y la migración de partidas v0.1.
 
-### Funcionalidades
+#### Funcionalidades
 - **Sala de la Orden** (botón fijo arriba y tecla S). Hay un portal vivo por zona abierta: muestra una versión simplificada de su escena real, con menos partículas, y un marco de piedra que late. Junto a cada portal aparecen el nombre, el saldo, la producción media y el próximo hito. Al pulsarlo se entra en la vista detallada; las compras siguen dentro. Una partida nueva abre en el bosque; después se recuerda la última vista, también la Sala. En pantallas estrechas los portales se apilan.
 - **Coherencia entre portal y detalle.** Cada zona tiene un único estado visual. Sus efectos llevan el instante en que nacen, y los indicadores (carga del pulso, raíces cortadas, estrellas, alineación de la órbita) se leen de las fases de la simulación. Un pulso ocurrido con la Sala abierta se ve al entrar en la cripta. Cambiar de vista no acredita nada.
 - **Jungla de las Mil Bocas** (id `jungle`, segunda en pantalla). Se descubre con 80/s automáticos en el bosque.
@@ -49,7 +185,7 @@ Objetivo: v0.2.0, una expansión jugable completa. Incluye la Sala de la Orden, 
   - El tiempo offline previo a la actualización no genera contenido nuevo (ni floraciones ni maestría).
   - No se conceden Ecos por actualizar.
 
-### Decisiones de diseño
+#### Decisiones de diseño
 - **Funciones de las entradas.** Cada mago repite el patrón: el foco automatiza; el accesorio refuerza al foco (Anillo, Collar, Medallón); la túnica o el hechizo produce de forma pasiva; el tocado modifica algo concreto (la Lluvia, el intervalo de poda, la Confluencia recibida). Así se evita que todo sea un multiplicador global.
 - **Flor de las Mil Bocas.** Suma una cantidad fija por floración en vez de multiplicar sobre el Polen. Con multiplicadores encadenados, la jungla llegaba a 12 M/s a los 8 min.
 - **Cielo Recordado.** No regala la Lluvia. Con ella gratis, la jungla se abría en el segundo 0.
@@ -58,7 +194,7 @@ Objetivo: v0.2.0, una expansión jugable completa. Incluye la Sala de la Orden, 
 - **Anillo: crecimiento ×1,7 → ×1,6.** En la v0.1 dejaba de convenir hacia el Nv 13–14: su recuperación pasaba de ~670 s en Nv 10 a ~5600 s en Nv 14, por encima de la Lluvia (~1500 s). En la simulación v0.2 llega al Nv 18 (antes 15).
 - **Refundar conserva la maestría**, por ser del aprendiz y cosmética.
 
-### Balance (`node tools/balance.js`)
+#### Balance (`node tools/balance.js`)
 Estrategia: 1 clic/s hasta el primer foco de cada zona; cada 20 s compra lo de mejor coste / (aumento en la zona que paga + ½ del aumento en las demás).
 
 | Hito | Objetivo | v0.1 simulado | v0.2 simulado |
@@ -85,7 +221,7 @@ Todas las entradas se compran en 70 min de juego normal. Primera compra de cada 
 
 Todavía no hay tiempos observados jugando.
 
-### Entradas por zona
+#### Entradas por zona
 Función y hito visual más fácil de probar. «Hojas» = hojas de contacto revisadas en Chrome (estados × cuadros); «lógica» = cubierto por `logic.test.js`.
 
 **Bosque del Velo**
@@ -124,7 +260,7 @@ Función y hito visual más fácil de probar. «Hojas» = hojas de contacto revi
 | Incienso de Vigilia | maná/s × campana | Nv 10: el humo sube en espiral | hojas |
 | Letanía de la Corona | ½ pulso base/nv cada 6 pulsos | la corona se dibuja sobre el Rey | hojas + lógica |
 
-### Verificación
+#### Verificación
 - **Lógica** (`node tests/logic.test.js`): **111/111**. Cubre:
   - 8 entradas únicas por zona y su distribución (foco, túnica, tocado, accesorio, 4 hechizos).
   - Topes: ×10 recortado y sin cobro tras el tope.
