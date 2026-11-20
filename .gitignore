@@ -1,0 +1,15 @@
+# Partidas exportadas desde el juego (Partida → Exportar JSON / Exportar copia v0.1)
+orden-del-umbral-*.json
+partidas/
+
+# Capturas y hojas de contacto generadas por tools/browser.js si se guardan dentro del proyecto
+capturas/
+
+# Instrucciones y configuración de Claude Code (se copian a mano a otro PC, no se publican)
+CLAUDE.md
+.claude/
+
+# Sistema
+.DS_Store
+Thumbs.db
+desktop.ini

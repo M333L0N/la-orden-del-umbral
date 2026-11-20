@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>La Orden del Umbral</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script defer src="js/config.js"></script>
+  <script defer src="js/sim.js"></script>
+  <script defer src="js/save.js"></script>
+  <script defer src="js/art.js"></script>
+  <script defer src="js/scene.js"></script>
+  <script defer src="js/ui.js"></script>
+  <script defer src="js/main.js"></script>
+</head>
+<body>
+  <a class="skip" href="#shop">Saltar a la tienda</a>
+  <header class="topbar">
+    <h1 class="title">La Orden del Umbral</h1>
+    <nav class="balances" aria-label="Vistas y saldos">
+      <button type="button" class="bal bal-room" id="btn-room" aria-pressed="false">
+        <span class="bal-name">Sala de la Orden</span><span class="bal-mana">Portales</span><kbd>S</kbd>
+      </button>
+      <button type="button" class="bal bal-forest" id="bal-forest"><span class="bal-name">Bosque</span><span class="bal-mana" id="mana-forest">0</span><span class="bal-rate" id="rate-forest">0/s</span></button>
+      <button type="button" class="bal bal-jungle" id="bal-jungle"><span class="bal-name">Jungla</span><span class="bal-mana" id="mana-jungle">Sellada</span><span class="bal-rate" id="rate-jungle"></span></button>
+      <button type="button" class="bal bal-crypt" id="bal-crypt"><span class="bal-name">Cripta</span><span class="bal-mana" id="mana-crypt">Sellada</span><span class="bal-rate" id="rate-crypt"></span></button>
+      <div class="bal bal-echoes" id="bal-echoes" hidden><span class="bal-name">Ecos</span><span class="bal-mana" id="echoes">0</span></div>
+    </nav>
+  </header>
+
+  <div class="notice" id="notice" hidden></div>
+
+  <section class="room" id="room" hidden aria-label="Sala de la Orden">
+    <div class="room-head">
+      <h2>Sala de la Orden</h2>
+      <p class="muted">Tus magos trabajan a la vez. Pulsa un portal para entrar en su zona; las compras se hacen dentro.</p>
+    </div>
+    <div class="portals" id="portals"></div>
+  </section>
+
+  <main class="layout" id="detail">
+    <section class="stage" aria-label="Escena">
+      <div class="zone-head">
+        <h2 id="zone-name">Bosque del Velo</h2>
+        <p class="goal" id="goal" aria-live="polite"></p>
+        <p class="goal-sub" id="goal-sub"></p>
+      </div>
+      <div class="scene-wrap" id="scene-wrap">
+        <canvas id="scene" width="256" height="144" tabindex="0" aria-label="Escena del juego. Pulsa Espacio para lanzar."></canvas>
+        <div class="overlay" id="overlay" aria-hidden="true"></div>
+        <div class="banner" id="banner" role="status" hidden></div>
+        <button type="button" class="anomaly-btn" id="anomaly-btn" hidden>Disipar anomalía (A)</button>
+      </div>
+      <div class="stage-controls">
+        <button type="button" class="cast" id="cast"><span id="cast-label">Lanzar Chispa</span> <small id="cast-gain">+1</small> <kbd>Espacio</kbd></button>
+        <div class="zone-stats" id="zone-stats"></div>
+      </div>
+    </section>
+
+    <aside class="shop" id="shop" aria-label="Tienda y opciones">
+      <div class="tabs" role="tablist">
+        <button type="button" role="tab" class="tab" data-panel="items" aria-selected="true">Objetos</button>
+        <button type="button" role="tab" class="tab" data-panel="order" aria-selected="false">Orden</button>
+        <button type="button" role="tab" class="tab" data-panel="prestige" aria-selected="false">Refundar</button>
+        <button type="button" role="tab" class="tab" data-panel="game" aria-selected="false">Partida</button>
+      </div>
+      <div class="panel" id="panel-items" role="tabpanel">
+        <div class="amounts" role="group" aria-label="Cantidad a comprar (tecla C)">
+          <span>Comprar:</span>
+          <button type="button" class="amt" data-amt="1">×1</button>
+          <button type="button" class="amt" data-amt="10">×10</button>
+          <button type="button" class="amt" data-amt="max">Máx</button>
+          <span class="muted small">ordenado por precio · teclas 1–8</span>
+        </div>
+        <div id="items" class="items"></div>
+      </div>
+      <div class="panel" id="panel-order" role="tabpanel" hidden></div>
+      <div class="panel" id="panel-prestige" role="tabpanel" hidden></div>
+      <div class="panel" id="panel-game" role="tabpanel" hidden>
+        <h3>Guardado</h3>
+        <p class="muted" id="save-status">La partida se guarda sola en este navegador.</p>
+        <div class="row">
+          <button type="button" id="btn-save">Guardar ahora</button>
+          <button type="button" id="btn-export">Exportar JSON</button>
+          <button type="button" id="btn-copy">Copiar al portapapeles</button>
+        </div>
+        <div class="row" id="backup-row" hidden>
+          <span class="muted">Copia de tu guardado v0.1 previa a la actualización:</span>
+          <button type="button" id="btn-backup">Exportar copia v0.1</button>
+        </div>
+        <label class="block" for="import-text">Importar partida (pega el JSON o elige un archivo):</label>
+        <textarea id="import-text" rows="4" spellcheck="false"></textarea>
+        <div class="row">
+          <input type="file" id="import-file" accept=".json,application/json">
+          <button type="button" id="btn-import">Validar e importar</button>
+        </div>
+        <p class="muted" id="import-msg" role="status"></p>
+        <h3>Accesibilidad</h3>
+        <label class="check"><input type="checkbox" id="opt-reduced"> Movimiento reducido</label>
+        <h3>Teclado</h3>
+        <ul class="keys">
+          <li><kbd>Espacio</kbd> lanzar con la mano libre (Chispa, marca de raíz, sello)</li>
+          <li><kbd>1</kbd>–<kbd>8</kbd> comprar la entrada con ese número (se ve en cada fila)</li>
+          <li><kbd>C</kbd> cambiar cantidad (×1 / ×10 / Máx)</li>
+          <li><kbd>Z</kbd> siguiente zona · <kbd>S</kbd> Sala de la Orden</li>
+          <li><kbd>A</kbd> disipar anomalía</li>
+        </ul>
+        <h3>Empezar desde cero</h3>
+        <p class="muted">Distinto de refundar: borra también los Ecos y los talentos.</p>
+        <button type="button" class="danger" id="btn-wipe">Empezar desde cero…</button>
+      </div>
+      <div class="log" id="log" aria-live="polite"></div>
+    </aside>
+  </main>
+
+  <dialog id="modal">
+    <form method="dialog">
+      <div id="modal-body"></div>
+      <div class="row modal-actions" id="modal-actions"></div>
+    </form>
+  </dialog>
+  <noscript>Este juego necesita JavaScript.</noscript>
+</body>
+</html>
