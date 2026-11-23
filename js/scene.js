@@ -7,7 +7,7 @@
 (function (root) {
   'use strict';
   var A = root.Arcane = root.Arcane || {};
-  var Art = A.Art, S = A.Sim, P = Art.P, C = A.CONFIG;
+  var Art = A.Art, S = A.Sim, P = Art.P, C = A.CONFIG, B = A.Bosses;
   var Scene = A.Scene = {};
   var W = Scene.W = 256, H = Scene.H = 144;
 
@@ -17,13 +17,16 @@
   Scene.spawned = 0;
 
   Scene.layout = {
-    forest: { mage: { x: 40, y: 96 }, hand: { x: 54, y: 106 }, free: { x: 43, y: 108 }, tip: { x: 54, y: 91 }, crystal: { x: 188, y: 86 }, target: { x: 192, y: 95 }, deer: { x: 192, y: 62 } },
-    jungle: { mage: { x: 34, y: 96 }, hand: { x: 48, y: 106 }, free: { x: 37, y: 108 }, book: { x: 46, y: 93 }, nodes: [92, 112, 132, 152, 172], nodeY: 125, graft: { x: 122, y: 122 }, queen: { x: 196, y: 40 } },
-    crypt: { mage: { x: 52, y: 95 }, hand: { x: 65, y: 107 }, free: { x: 55, y: 110 }, tip: { x: 65, y: 90 }, circle: { x: 160, y: 124, rx: 38, ry: 8 }, bell: { x: 160, y: 22 } }
+    forest: { mage: { x: 40, y: 96 }, hand: { x: 54, y: 106 }, free: { x: 43, y: 108 }, tip: { x: 54, y: 91 }, crystal: { x: 128, y: 84 }, crystalC: { x: 132, y: 93 }, target: { x: 200, y: 90 }, deer: { x: 200, y: 90 } },
+    jungle: { mage: { x: 34, y: 96 }, hand: { x: 48, y: 106 }, free: { x: 37, y: 108 }, book: { x: 46, y: 93 }, nodes: [92, 112, 132, 152, 172], nodeY: 125, graft: { x: 122, y: 122 }, queen: { x: 208, y: 120 } },
+    crypt: { mage: { x: 52, y: 95 }, hand: { x: 65, y: 107 }, free: { x: 55, y: 110 }, tip: { x: 65, y: 90 }, circle: { x: 160, y: 124, rx: 38, ry: 8 }, bell: { x: 160, y: 22 } },
+    castle: { mage: { x: 36, y: 96 }, hand: { x: 50, y: 106 }, free: { x: 39, y: 108 }, regent: { x: 200, y: 122 } },
+    caverns: { mage: { x: 30, y: 96 }, hand: { x: 44, y: 106 }, free: { x: 33, y: 108 }, mirror: { x: 52, y: 100 }, eye: { x: 196, y: 48 } }
   };
   var L = Scene.layout;
   // Recorte de cada escena que se ve dentro de su portal
-  Scene.portalCrop = { forest: { x: 24, y: 24, w: 192, h: 112 }, jungle: { x: 22, y: 26, w: 192, h: 112 }, crypt: { x: 40, y: 18, w: 192, h: 112 } };
+  // Recorte del portal: deja ver al mago y a su jefe
+  Scene.portalCrop = { forest: { x: 26, y: 18, w: 216, h: 120 }, jungle: { x: 22, y: 18, w: 216, h: 120 }, crypt: { x: 36, y: 14, w: 216, h: 120 }, castle: { x: 22, y: 18, w: 216, h: 120 }, caverns: { x: 18, y: 10, w: 220, h: 124 } };
 
   function newView(zid) {
     return { zid: zid, fx: [], acc: { cast: 0, robe: 0, spell: 0, agg: 0 }, agg: 0, lastT: 0, evo: null, gesture: -9, fire: -9, glow: 0, deer: 0, flash: -9, extra: {} };
@@ -36,7 +39,7 @@
     mainCv = canvas; overlay = ov;
     mainCv.width = W; mainCv.height = H;
     mainG = mainCv.getContext('2d'); mainG.imageSmoothingEnabled = false;
-    bgs.forest = forestBg(); bgs.jungle = jungleBg(); bgs.crypt = cryptBg();
+    bgs.forest = forestBg(); bgs.jungle = jungleBg(); bgs.crypt = cryptBg(); bgs.castle = castleBg(); bgs.caverns = cavernsBg();
     C.zoneOrder.forEach(function (z) { views[z] = newView(z); });
   };
   Scene.setZone = function (z) {
@@ -108,8 +111,8 @@
     Art.rect(x, 164, 62, 1, 58, ruinL); Art.rect(x, 213, 66, 1, 54, ruinL);
     for (i = 0; i < 18; i++) Art.px(x, 164 + R() * 58, 60 + R() * 50, moss);
     Art.rect(x, 6, 78, 12, 42, ruin); Art.rect(x, 4, 76, 16, 3, ruin); Art.rect(x, 6, 78, 1, 42, ruinL); Art.rect(x, 18, 74, 3, 4, ruin);
-    Art.rect(x, 180, 105, 25, 15, '#10181d'); Art.rect(x, 178, 104, 29, 3, '#1a2a30'); Art.rect(x, 180, 107, 25, 1, '#070b0e');
-    Art.rune(x, 185, 111, 0, '#0f4a46'); Art.rune(x, 191, 111, 2, '#0f4a46'); Art.rune(x, 197, 111, 4, '#0f4a46');
+    Art.rect(x, 120, 103, 25, 17, '#10181d'); Art.rect(x, 118, 102, 29, 3, '#1a2a30'); Art.rect(x, 120, 105, 25, 1, '#070b0e');
+    Art.rune(x, 125, 110, 0, '#0f4a46'); Art.rune(x, 131, 110, 2, '#0f4a46'); Art.rune(x, 137, 110, 4, '#0f4a46');
     Art.rect(x, 0, 120, W, H - 120, '#051216'); Art.rect(x, 0, 120, W, 1, '#0c2a2e');
     for (i = 0; i < 70; i++) Art.px(x, R() * W, 121 + R() * 22, R() > 0.5 ? '#0b2628' : '#0a1d20');
     for (i = 0; i < 30; i++) { var tx = Math.floor(R() * W); Art.px(x, tx, 119, '#123a36'); Art.px(x, tx + 1, 118, '#123a36'); }
@@ -166,6 +169,8 @@
     if (ev.zone === 'crypt' && ev.type === 'pulse') {
       v.flash = t; v.extra.bellVel = (v.extra.bellVel || 0) + (reduced ? 0 : 9);
       add(v, { k: 'pulse', dur: 1.2, conf: ev.cross > 0 });
+      v.extra.pulseN = (v.extra.pulseN || 0) + 1;
+      if (v.extra.pulseN % 5 === 0) add(v, { k: 'insig', dur: reduced ? 0.9 : 1.6 });
       var txt = '+' + A.fmt(ev.reward * ev.count) + (ev.count > 1 ? ' (×' + ev.count + ')' : '');
       floater('crypt', txt, Z.bell.x, Z.bell.y - 4, 'amber big');
       if (ev.cross > 0) floater('crypt', 'Confluencia +' + A.fmt(ev.cross * ev.count), Z.bell.x + 40, Z.bell.y + 14, 'teal');
@@ -175,13 +180,22 @@
     } else if (ev.zone === 'jungle' && ev.type === 'prune') {
       add(v, { k: 'prune', dur: 0.6, node: v.extra.lastSeq || 0 }); v.fire = t;
     } else if (ev.zone === 'jungle' && ev.type === 'bloom') {
-      add(v, { k: 'bloom', dur: 1.8 }); v.flash = t;
+      add(v, { k: 'bloom', dur: 1.8 }); v.flash = t; add(v, { k: 'insig', dur: reduced ? 0.9 : 1.6 });
       floater('jungle', 'Floración +' + A.fmt(ev.reward * ev.count), 140, 98, 'acid big');
       if (ev.cross > 0) floater('jungle', 'Polen Astral +' + A.fmt(ev.cross * ev.count), 150, 84, 'teal');
     } else if (ev.zone === 'jungle' && ev.type === 'graft') {
       add(v, { k: 'graftcut', dur: 0.8 }); floater('jungle', '+' + A.fmt(ev.reward * ev.count), Z.graft.x, Z.graft.y - 22, 'acid');
+    } else if (ev.zone === 'castle' && ev.type === 'crack') {
+      add(v, { k: 'fire', dur: 0.45, part: v.extra.lastCrack || 0 }); v.fire = t;
+    } else if (ev.zone === 'castle' && ev.type === 'thaw') {
+      add(v, { k: 'insig', dur: reduced ? 1.0 : 1.8 }); v.flash = t;
+      floater('castle', 'Deshielo +' + A.fmt(ev.reward * ev.count), L.castle.regent.x, 30, 'ember big');
+      if (ev.cross > 0) floater('castle', 'Réquiem +' + A.fmt(ev.cross * ev.count), L.castle.regent.x - 30, 46, 'amber');
+    } else if (ev.zone === 'caverns' && ev.type === 'eye') {
+      add(v, { k: 'insig', dur: reduced ? 1.0 : 1.8 }); v.flash = t;
+      floater('caverns', 'Mirada del ojo +' + A.fmt(ev.reward * ev.count), L.caverns.eye.x - 20, 20, 'ice big');
     } else if (ev.zone === 'forest' && ev.type === 'orbit') {
-      add(v, { k: 'orbit', dur: 0.8, cross: ev.cross > 0 }); floater('forest', 'Órbita +' + A.fmt(ev.reward * ev.count), L.forest.target.x - 24, L.forest.crystal.y - 18, 'teal');
+      add(v, { k: 'orbit', dur: 0.8, cross: ev.cross > 0 }); floater('forest', 'Órbita +' + A.fmt(ev.reward * ev.count), L.forest.crystalC.x, L.forest.crystal.y - 18, 'teal');
     } else if (ev.zone === 'forest' && ev.type === 'constellation') {
       add(v, { k: 'figure', dur: 2.0 }); v.deer = 1; floater('forest', 'Constelación +' + A.fmt(ev.reward * ev.count), L.forest.deer.x, 28, 'teal big');
     }
@@ -199,6 +213,13 @@
       add(v, { k: 'mark', x0: Z.free.x - 2, y0: Z.free.y - 12, x1: nx, y1: Z.nodeY - 3, dur: 0.4 });
       floater('jungle', '+' + A.fmt(info.gain), nx, Z.nodeY - 18, 'acid');
       if (info.bloom > 0) Scene.event({ zone: 'jungle', type: 'bloom', count: 1, reward: info.bloom, cross: 0 });
+    } else if (zid === 'castle') {
+      var parts = B.regentParts(Z.regent.x, Z.regent.y), tp = parts[(v.extra.lastCrack || 0) % parts.length];
+      add(v, { k: 'ember', x0: Z.free.x - 2, y0: Z.free.y - 12, x1: tp.x, y1: tp.y, dur: 0.5 });
+      floater('castle', '+' + A.fmt(info.gain), tp.x, tp.y - 14, 'ember');
+    } else if (zid === 'caverns') {
+      add(v, { k: 'breath', x0: Z.free.x - 2, y0: Z.free.y - 12, x1: Z.eye.x, y1: Z.eye.y, dur: 0.45 });
+      floater('caverns', '+' + A.fmt(info.gain), Z.eye.x - 30, Z.eye.y + 24, 'ice');
     } else {
       var Cc = Z.circle, i = (v.extra.seals = (v.extra.seals || 0) + 1) % 6, a = i / 6 * Math.PI * 2;
       add(v, { k: 'seal', x0: Z.free.x - 2, y0: Z.free.y - 10, x1: Cc.x + Math.cos(a) * Cc.rx * 0.6, y1: Cc.y + Math.sin(a) * Cc.ry * 0.6, dur: 1.4, rune: i });
@@ -206,6 +227,12 @@
     }
   };
 
+  // Ataque culminante de la refundación: el insignia de cada mago (su jefe cae después con defeat).
+  Scene.culminate = function (zid, st) {
+    var v = views[zid], tier = zid === 'forest' ? S.visualTier('forest', 'spell', Math.max(1, st.zones.forest.items.spell)) : 0;
+    add(v, { k: 'insig', dur: 1.6, tier: tier });
+    if (zid === 'jungle' || zid === 'castle' || zid === 'caverns') v.flash = now();
+  };
   Scene.evolve = function (zid, id, from, to) { views[zid].evo = { id: id, from: from, to: to, t0: now(), dur: reduced ? 1.2 : 2.0 }; };
   Scene.evolving = function (zid) { var e = views[zid || mainZone].evo; return !!(e && now() - e.t0 < e.dur); };
   Scene.awaken = function (zid) { views[zid].extra.awaken = now(); };
@@ -223,17 +250,21 @@
     }
   };
   // Dibuja una zona completa en un contexto 256×144. simple = versión de portal (menos partículas)
-  function drawZone(g, zid, st, time, simple) {
+  var curOpts = {};
+  function drawZone(g, zid, st, time, simple, opts) {
     var v = views[zid];
     var dt = v.lastT ? Math.max(0, Math.min(0.1, time - v.lastT)) : 0;
     v.lastT = time;
-    clock = time;
+    clock = time; curOpts = opts || {};
     g.drawImage(bgs[zid], 0, 0);
     if (zid === 'forest') drawForest(g, v, st, dt, time, simple);
     else if (zid === 'jungle') drawJungle(g, v, st, dt, time, simple);
-    else drawCrypt(g, v, st, dt, time, simple);
+    else if (zid === 'crypt') drawCrypt(g, v, st, dt, time, simple);
+    else if (zid === 'castle') drawCastle(g, v, st, dt, time, simple);
+    else drawCaverns(g, v, st, dt, time, simple);
     drawParts(g, v, time, simple);
-    clock = null;
+    if (curOpts.defeat) defeatOverlay(g, zid, curOpts.defeat);
+    clock = null; curOpts = {};
   }
   Scene.drawZone = drawZone;
 
@@ -315,17 +346,17 @@
       g.globalAlpha = 1;
       for (i = 0; i < (reduced ? 4 : 9); i++) Art.px(g, (i * 53 + Math.sin(time * 0.4 + i) * 20 + (reduced ? 0 : time * 3)) % W, 60 + i * 6 % 50 + Math.sin(time * 0.9 + i * 2) * 6, Math.sin(time * 3 + i) > 0.2 ? P.teal : P.tealD);
     }
-    // Ciervo Hueco tras el cristal: se revela al recibir magia
     v.deer = Math.max(0, v.deer - dt * 1.2);
     v.glow = Math.max(0.15, v.glow - dt * 1.5);
-    Art.deer(g, F.deer.x, F.deer.y, 0.35, '#0c1e24');
-    if (v.deer > 0.02) Art.deer(g, F.deer.x, F.deer.y, v.deer * 0.8, P.tealM);
+    dimOverlay(g, v, time);
+    // Ciervo Hueco: jefe de vida infinita. Pecho hueco que brilla con la magia, astas que se encienden.
+    B.deer(g, F.deer.x, F.deer.y, { hit: Math.max(0, 1 - (time - (ex.deerHit || -9)) / 0.18), glow: Math.max(v.deer, v.glow * 0.5), antler: Math.max(0, 1 - (time - (ex.antler || -9)) / 1.4), defeat: curOpts.defeat || 0, time: time });
 
-    var spellT = vt('forest', 'spell', it.spell), orbitT = vt('forest', 'orbit', it.orbit), prismT = vt('forest', 'prism', it.prism), constT = vt('forest', 'constellation', it.constellation);
+    var spellT = Math.max(vt('forest', 'spell', it.spell), it.spell > 0 && st.prestige.talents.comet > 0 ? 1 : 0), orbitT = vt('forest', 'orbit', it.orbit), prismT = vt('forest', 'prism', it.prism), constT = vt('forest', 'constellation', it.constellation);
     // Constelación: estrellas encendidas según la fase económica de la figura
     if (it.constellation > 0 && it.staff > 0) {
       var cm = S.model(st, 'forest').cycles.filter(function (c) { return c.id === 'constellation'; })[0];
-      var stars = Art.deerStars(F.deer.x, F.deer.y), lit = cm ? Math.floor((z.cyc.constellation || 0) / cm.interval * stars.length) : 0;
+      var stars = B.deerAntlerTips(F.deer.x, F.deer.y), lit = cm ? Math.floor((z.cyc.constellation || 0) / cm.interval * stars.length) : 0;
       stars.forEach(function (s, k) {
         var on = k < lit;
         Art.star(g, s[0], s[1], on ? P.tealW : '#1d4a50', on && constT >= 1 && Math.sin(time * 6 + k) > 0);
@@ -334,9 +365,9 @@
     }
     // cristal (eclipse durante la Lluvia en su forma final)
     var eclipse = ex.eclipse && time - ex.eclipse < 0.6;
-    g.globalAlpha = 0.15 + v.glow * 0.25 + Math.sin(time * 2) * 0.05; Art.diamond(g, F.target.x, F.target.y, 16, eclipse ? '#ffffff' : P.tealM); g.globalAlpha = 1;
+    g.globalAlpha = 0.15 + v.glow * 0.25 + Math.sin(time * 2) * 0.05; Art.diamond(g, F.crystalC.x, F.crystalC.y, 14, eclipse ? '#ffffff' : P.tealM); g.globalAlpha = 1;
     Art.crystal(g, F.crystal.x, F.crystal.y, v.glow, eclipse);
-    if (eclipse) { Art.ellipse(g, F.target.x, F.target.y, 7, 11, '#ffffff'); v.deer = 1; }
+    if (eclipse) { Art.ellipse(g, F.crystalC.x, F.crystalC.y, 7, 11, '#ffffff'); v.deer = 1; ex.antler = time; }
 
     // Órbita Gemela: posición de los fragmentos ligada a la fase económica de la alineación
     if (it.orbit > 0) drawOrbit(g, v, st, time, orbitT);
@@ -353,13 +384,17 @@
     var robeRate = it.robe > 0 && !simple ? Math.min(4, 0.4 + it.robe * 0.06) : 0;
     v.acc.robe += dt * robeRate;
     while (v.acc.robe >= 1) { v.acc.robe -= 1; add(v, { k: 'mote', x0: F.mage.x + 4 + Math.random() * 9, y0: F.mage.y + 18, dur: 1.8 + Math.random() }); }
+    if (it.spell > 0 && !curOpts.defeat) {
+      if (!ex.nextIns || ex.nextIns - time > 30) ex.nextIns = time + 2.5;
+      if (time >= ex.nextIns) { add(v, { k: 'insig', dur: reduced ? 1.0 : 1.8, tier: spellT }); ex.nextIns = time + (reduced ? 14 : 9); }
+    }
     var spellRate = it.spell > 0 ? (spellT >= 4 ? 0.5 : Math.min(3, 0.4 + it.spell * 0.05)) * (simple ? 0.6 : 1) : 0;
     v.acc.spell += dt * spellRate;
     while (v.acc.spell >= 1) { v.acc.spell -= 1; add(v, { k: 'fall', x0: 150 + Math.random() * 90, dur: 0.8 + Math.random() * 0.2, tier: spellT }); }
     // número agregado de la producción continua
     if (!simple) {
       v.agg += S.forestProd(st) * dt; v.acc.agg += dt;
-      if (v.acc.agg >= 1.2) { if (v.agg > 0) floater('forest', '+' + A.fmt(v.agg), F.target.x + 12, F.crystal.y - 6, 'teal'); v.agg = 0; v.acc.agg = 0; }
+      if (v.acc.agg >= 1.2) { if (v.agg > 0) floater('forest', '+' + A.fmt(v.agg), F.target.x - 10, F.target.y - 44, 'teal'); v.agg = 0; v.acc.agg = 0; }
     }
 
     // aprendiz con capas: túnica, tocado, báculo, anillo y gesto de la mano libre
@@ -391,7 +426,7 @@
 
   function drawOrbit(g, v, st, time, t) {
     var F = L.forest, iv = C.zones.forest.orbit.interval, p = Math.min(1, (st.zones.forest.cyc.orbit || 0) / iv);
-    var cx = F.target.x, cy = F.target.y, a = p * Math.PI * 6, b = a + Math.PI * (1 - p);
+    var cx = F.crystalC.x, cy = F.crystalC.y, a = p * Math.PI * 6, b = a + Math.PI * (1 - p);
     function pos(ang, k) {
       if (t >= 5) { var s = Math.sin(ang); return [cx + Math.sin(ang) * 18, cy + s * Math.cos(ang) * 8]; } // órbita en ocho
       var rx = 16, ry = t >= 3 ? 9 : 5, tilt = t >= 3 ? 0.35 : 0;
@@ -415,11 +450,12 @@
       var p = Math.min(1, a / e.dur);
       if (over) e.done = true;
       if (e.k === 'spark') {
-        var x = e.x0 + (e.x1 - e.x0) * p, y = e.y0 + (e.y1 - e.y0) * p - Math.sin(p * Math.PI) * e.arc;
-        if (p > 0.96 && !e.hit) { e.hit = 1; v.glow = 1; v.deer = Math.max(v.deer, 0.5); if (e.prism >= 0) add(v, { k: 'prism', dur: 0.45, tier: e.prism, x: e.x1, y: e.y1 }); burst(v, e.x1, e.y1, P.teal, 3); }
+        var sp0 = sparkPos(e, p), x = sp0[0], y = sp0[1];
+        if (p > 0.45 && p < 0.6) v.glow = Math.max(v.glow, 0.8); // la chispa atraviesa el cristal
+        if (p > 0.96 && !e.hit) { e.hit = 1; v.deer = Math.max(v.deer, 0.6); v.extra.deerHit = time; if (e.prism >= 0) add(v, { k: 'prism', dur: 0.45, tier: e.prism, x: e.x1, y: e.y1 }); burst(v, e.x1, e.y1, P.teal, 3); }
         var tl = e.tier >= 2 ? 5 : e.tier >= 1 ? 3 : 2;
         for (var k = tl; k > 0; k--) {
-          var q = Math.max(0, p - k * 0.03), tx = e.x0 + (e.x1 - e.x0) * q, ty = e.y0 + (e.y1 - e.y0) * q - Math.sin(q * Math.PI) * e.arc;
+          var q = Math.max(0, p - k * 0.03), tq = sparkPos(e, q), tx = tq[0], ty = tq[1];
           Art.px(g, tx, ty, k > tl / 2 ? P.tealD : P.tealM);
           if (e.mastery >= 1 && k === tl) { Art.px(g, tx, ty - 2, P.tealD); Art.px(g, tx, ty + 2, P.tealD); } // estela bifurcada (maestría I)
           if (e.mastery >= 2) Art.px(g, tx, ty + Math.sin(q * 40) * 2, P.teal);         // estela trenzada (maestría II)
@@ -434,22 +470,25 @@
         var mx = e.x0 + (e.x1 - e.x0) * p, my = e.y0 + (e.y1 - e.y0) * p;
         Art.line(g, e.x0 + (e.x1 - e.x0) * Math.max(0, p - 0.12), e.y0 + (e.y1 - e.y0) * Math.max(0, p - 0.12), mx, my, P.tealW, 2);
         Art.star(g, mx, my, '#ffffff', true);
-        if (p > 0.95 && !e.hit) { e.hit = 1; v.glow = 1; v.deer = 1; burst(v, e.x1, e.y1, P.tealW, 9); floater('forest', '+' + A.fmt(e.amount), e.x1 - 6, e.y1 - 14, 'teal big'); }
+        if (p > 0.95 && !e.hit) { e.hit = 1; v.glow = 1; v.deer = 1; v.extra.deerHit = time; burst(v, e.x1, e.y1, P.tealW, 9); floater('forest', '+' + A.fmt(e.amount), e.x1 - 6, e.y1 - 14, 'teal big'); }
       } else if (e.k === 'mote') {
-        var mx2 = e.x0 + (F.target.x - e.x0) * p * p, my2 = e.y0 - Math.sin(p * Math.PI) * 30 + (F.target.y - e.y0) * p;
+        var mx2 = e.x0 + (F.crystalC.x - e.x0) * p * p, my2 = e.y0 - Math.sin(p * Math.PI) * 30 + (F.crystalC.y - e.y0) * p;
         Art.px(g, mx2, my2, '#9fc9b8');
       } else if (e.k === 'fall') drawFall(g, v, e, p, a, time);
       else if (e.k === 'prism') drawPrism(g, v, e, p);
       else if (e.k === 'orbit') {
         // Descarga de la alineación: destello (0–1), rayo vertical (2–3), anillo (4–5), estallido solar (6)
         v.glow = 1; g.globalAlpha = 1 - p;
-        if (orbitT <= 1) Art.line(g, F.target.x - 16, F.target.y, F.target.x + 16, F.target.y, P.tealW);
-        else if (orbitT <= 3) { Art.rect(g, F.target.x - 1, F.target.y - 34 + p * 10, 3, 50, P.tealW); }
-        else if (orbitT <= 5) { var r = 6 + p * 30; Art.ellipse(g, F.target.x, F.target.y, r, r * 0.6, P.tealW); Art.ellipse(g, F.target.x, F.target.y, r * 0.6, r * 0.36, P.teal, 2); }
-        else for (var ry = 0; ry < 12; ry++) { var an = ry / 12 * Math.PI * 2; Art.line(g, F.target.x, F.target.y, F.target.x + Math.cos(an) * (8 + p * 26), F.target.y + Math.sin(an) * (6 + p * 18), '#fff6c8', 2); }
-        if (e.cross) Art.ellipse(g, F.target.x, F.target.y, 10 + p * 20, 6 + p * 12, P.acid, 2);
+        var oc = F.crystalC;
+        if (orbitT <= 1) Art.line(g, oc.x - 16, oc.y, oc.x + 16, oc.y, P.tealW);
+        else if (orbitT <= 3) { Art.rect(g, oc.x - 1, oc.y - 34 + p * 10, 3, 50, P.tealW); }
+        else if (orbitT <= 5) { var r = 6 + p * 30; Art.ellipse(g, oc.x, oc.y, r, r * 0.6, P.tealW); Art.ellipse(g, oc.x, oc.y, r * 0.6, r * 0.36, P.teal, 2); }
+        else for (var ry = 0; ry < 12; ry++) { var an = ry / 12 * Math.PI * 2; Art.line(g, oc.x, oc.y, oc.x + Math.cos(an) * (8 + p * 26), oc.y + Math.sin(an) * (6 + p * 18), '#fff6c8', 2); }
+        if (e.cross) Art.ellipse(g, oc.x, oc.y, 10 + p * 20, 6 + p * 12, P.acid, 2);
+        if (p < 0.3) Art.line(g, oc.x, oc.y, F.target.x, F.target.y, P.tealW, 2); // la descarga cruza hasta el ciervo
         g.globalAlpha = 1;
       } else if (e.k === 'figure') drawFigure(g, v, e, p, constT, time);
+      else if (e.k === 'insig') drawForestInsignia(g, v, e, a, time);
       return !over;
     });
   }
@@ -481,7 +520,7 @@
   }
   // Prisma del Velo: 7 refracciones distintas
   function drawPrism(g, v, e, p) {
-    var F = L.forest, x = F.target.x, y = F.target.y - 2, t = e.tier, len = Math.round(6 + p * 14), A2 = 1 - p;
+    var F = L.forest, x = F.crystalC.x, y = F.crystalC.y - 2, t = e.tier, len = Math.round(6 + p * 14), A2 = 1 - p;
     g.globalAlpha = A2;
     if (t === 0) Art.line(g, x, y, x + len * 0.4, y - len, P.tealW);
     else if (t === 1) { Art.line(g, x, y, x + len * 0.6, y - len, P.tealW); Art.line(g, x, y, x - len * 0.6, y - len, P.teal); }
@@ -489,12 +528,12 @@
     else if (t === 3) { Art.line(g, x, y, 178, 48, P.tealW, 2); if (p > 0.4) Art.line(g, 178, 48, 206, 48, P.teal, 2); if (p > 0.7) Art.line(g, 206, 48, x, y, P.tealW, 2); }
     else if (t === 4) { var tri = [[x, y - 6], [x - 4, y + 4], [x + 4, y + 4]]; for (var i = 0; i < 3; i++) Art.line(g, tri[i][0], tri[i][1], tri[(i + 1) % 3][0], tri[(i + 1) % 3][1], '#ffffff'); tri.forEach(function (q) { Art.line(g, q[0], q[1], q[0] + (q[0] - x) * 3, q[1] + (q[1] - y) * 3, P.teal, 2); }); }
     else if (t === 5) for (var s = 0; s < 14; s++) { var a = s * 0.5 + p * 4, r = s * 1.6 * (0.4 + p); Art.px(g, x + Math.cos(a) * r, y + Math.sin(a) * r * 0.7, s % 2 ? P.teal : P.tealW); }
-    else { Art.line(g, x, y, F.deer.x - 13, F.deer.y - 13, P.tealW, 2); Art.line(g, x, y, F.deer.x + 13, F.deer.y - 13, P.tealW, 2); v.deer = Math.max(v.deer, 0.8); }
+    else { var tips = B.deerAntlerTips(F.deer.x, F.deer.y); Art.line(g, x, y, tips[1][0], tips[1][1], P.tealW, 2); Art.line(g, x, y, tips[3][0], tips[3][1], P.tealW, 2); v.extra.antler = clock; }
     g.globalAlpha = 1;
   }
   // Constelación del Ciervo completada: 7 lecturas
   function drawFigure(g, v, e, p, t, time) {
-    var F = L.forest, stars = Art.deerStars(F.deer.x, F.deer.y), al = Math.sin(p * Math.PI);
+    var F = L.forest, stars = B.deerAntlerTips(F.deer.x, F.deer.y), al = Math.sin(p * Math.PI);
     if (e.mini) { // constelación breve de la Lluvia (Nv 150) y segunda oleada (Nv 200)
       g.globalAlpha = al; for (var i = 1; i < stars.length; i++) Art.line(g, stars[i - 1][0], stars[i - 1][1], stars[i][0], stars[i][1], P.tealW, 2); g.globalAlpha = 1;
       if (e.wave && p > 0.4) for (var w = 0; w < 3; w++) { var q = (p - 0.4) / 0.6; Art.diamond(g, stars[w * 3][0] + (F.target.x - stars[w * 3][0]) * q, stars[w * 3][1] + (F.target.y - stars[w * 3][1]) * q, 0, P.tealW); }
@@ -503,10 +542,12 @@
     g.globalAlpha = al;
     for (var k = 1; k < stars.length; k++) Art.line(g, stars[k - 1][0], stars[k - 1][1], stars[k][0], stars[k][1], P.tealW, t >= 1 ? 1 : 2);
     stars.forEach(function (s) { Art.star(g, s[0], s[1], '#ffffff', t >= 1); });
-    if (t >= 2) Art.deer(g, F.deer.x + (t >= 4 && p > 0.5 ? 2 : 0), F.deer.y, t >= 3 ? 0.9 : 0.6, t >= 3 ? P.tealM : P.tealD);
+    if (t >= 2) v.extra.antler = time;                 // la testa: las astas se encienden
+    if (t >= 3) v.deer = 1;                            // la silueta: el pecho brilla
+    if (t >= 4 && p > 0.5) v.extra.deerHit = time;     // el ciervo gira la cabeza
     g.globalAlpha = 1;
     if (t >= 5 && p > 0.3 && p < 0.8) { var q2 = (p - 0.3) / 0.5; Art.diamond(g, F.deer.x + (F.target.x - F.deer.x) * q2, F.deer.y - 18 + (F.target.y - F.deer.y + 18) * q2, 2, '#ffffff'); }
-    if (t >= 6) { g.globalAlpha = al * 0.7; Art.deer(g, F.target.x, F.target.y - 30, 1, P.tealW, 1.5); g.globalAlpha = 1; }
+    if (t >= 6) { g.globalAlpha = al * 0.6; for (var k2 = 0; k2 < stars.length; k2++) Art.line(g, F.crystalC.x, F.crystalC.y, stars[k2][0], stars[k2][1], P.tealW, 3); g.globalAlpha = 1; }
   }
 
   // =====================================================================
@@ -522,9 +563,11 @@
     // Reina Injerto (las bocas se abren al florecer)
     var bloomAge = time - v.flash, open = bloomAge >= 0 && bloomAge < 1.8 ? Math.sin(Math.min(1, bloomAge / 1.8) * Math.PI) : 0.08 + Math.sin(time * 1.3) * 0.05;
     var mEvo = evoTier(v, 'maw', mawT, time);
-    Art.queen(g, J.queen.x, J.queen.y, open, it.maw > 0 ? mEvo.tier : -1, time);
-    evoPillar(g, J.queen.x + 2, J.queen.y, 40, mEvo, P.sickL, time);
-    if (it.maw > 0 && mEvo.tier >= 4 && open > 0.5) for (var sp = 0; sp < 3; sp++) Art.px(g, J.queen.x + 2 - (bloomAge * 40 + sp * 6), J.queen.y + 20 + sp * 3, P.acid);
+    dimOverlay(g, v, time);
+    var qh = B.queenHead(J.queen.x, J.queen.y);
+    B.queen(g, J.queen.x, J.queen.y, { open: Math.max(open, curOpts.defeat ? 0 : 0), hit: Math.max(0, 1 - (time - (ex.queenHit || -9)) / 0.2), defeat: curOpts.defeat || 0, mawTier: it.maw > 0 ? mEvo.tier : -1, time: time });
+    evoPillar(g, qh.x, qh.y - 30, 40, mEvo, P.sickL, time);
+    if (it.maw > 0 && mEvo.tier >= 4 && open > 0.5) for (var sp = 0; sp < 3; sp++) Art.px(g, qh.x - 20 - (bloomAge * 40 + sp * 6), qh.y + sp * 3, P.acid);
     // nodos de la secuencia (raíces corrompidas → cortadas), leídos de la fase económica
     J.nodes.forEach(function (nx, k) {
       var cut = k < idx, target = k === idx;
@@ -604,7 +647,7 @@
           drawBlade(g, pt[0], pt[1], sickT, time);
         }
         if (p > 0.55 && !e.hit) {
-          e.hit = 1; burst(v, nx, ny, P.acid, 5);
+          e.hit = 1; burst(v, nx, ny, P.acid, 5); v.extra.queenHit = time;
           if (sickT >= 2) add(v, { k: 'slash', dur: 0.4, x: nx + 6, y: ny });
           if (sickT >= 4) add(v, { k: 'trail', dur: 0.6, x: nx });
           if (sickT >= 6) add(v, { k: 'scythe', dur: 0.7 });
@@ -621,7 +664,8 @@
         var reach = Math.min(5, Math.floor(p * 7));
         for (var k = 0; k < reach; k++) { var fx = J.nodes[k], fy = J.nodeY - 6 - Math.round(Math.sin(Math.min(1, p * 2) * Math.PI / 2) * 3); Art.px(g, fx, fy, '#ffd0f0'); Art.px(g, fx - 1, fy + 1, '#ff9ad6'); Art.px(g, fx + 1, fy + 1, '#ff9ad6'); Art.px(g, fx, fy + 1, '#ffe08a'); }
         if (polT >= 6) for (var s = 0; s < 12; s++) Art.px(g, J.nodes[0] + (s * 37 + p * 60) % 100, J.nodeY - 30 + Math.sin(s + p * 8) * 12, '#ffe08a');
-      } else if (e.k === 'graftcut') {
+      } else if (e.k === 'insig') drawJungleInsignia(g, v, e, a, time);
+      else if (e.k === 'graftcut') {
         g.globalAlpha = 1 - p; Art.line(g, J.graft.x - 6, J.graft.y - 14, J.graft.x + 6, J.graft.y - 4, '#ffffff');
         if (grT >= 6) Art.ellipse(g, J.graft.x, J.graft.y - 14, 8 + p * 8, 8 + p * 8, '#e8f0ff', 2);
         g.globalAlpha = 1;
@@ -640,7 +684,7 @@
   // CRIPTA
   // =====================================================================
   function drawCrypt(g, v, st, dt, time, simple) {
-    var Cz = L.crypt, z = st.zones.crypt, it = z.items, ex = v.extra, Cc = Cz.circle, B = Cz.bell;
+    var Cz = L.crypt, z = st.zones.crypt, it = z.items, ex = v.extra, Cc = Cz.circle, Bl = Cz.bell;
     var bellT = vt('crypt', 'bell', it.bell), chalkT = vt('crypt', 'chalk', it.chalk), incT = vt('crypt', 'incense', it.incense), litT = vt('crypt', 'litany', it.litany);
     [[21, 81], [33, 79], [221, 81], [233, 79]].forEach(function (p, i) {
       var fl = reduced ? 0 : Math.round(Math.sin(time * 9 + i * 3) * 0.7);
@@ -649,6 +693,7 @@
     });
     var interval = S.cryptInterval(st), charge = it.staff > 0 ? Math.min(1, (z.cyc.pulse || 0) / interval) : 0;
     var sinceFlash = time - v.flash, flash = sinceFlash >= 0 && sinceFlash < 0.5 ? 1 - sinceFlash / 0.5 : 0;
+    dimOverlay(g, v, time);
     // purificación de la Letanía en su forma final: los muros brillan
     var litAge = time - (ex.litany || -9);
     if (litT >= 6 && litAge < 1.2) { g.globalAlpha = 0.25 * (1 - litAge / 1.2); Art.rect(g, 0, 0, W, 118, P.amberL); g.globalAlpha = 1; }
@@ -671,22 +716,22 @@
     if (chEvo.tier >= 6 && flash > 0) { g.globalAlpha = flash * 0.6; for (var c2 = 0; c2 < 5; c2++) Art.rune(g, Cc.x - 20 + c2 * 9, Cc.y - 12 - flash * 30, c2, P.amberL); g.globalAlpha = 1; }
 
     // Rey sin Réquiem: se materializa con la carga, se disipa con la campanada
-    var kingA = it.staff > 0 ? charge * 0.8 * (1 - flash) : 0.15;
+    var kingA = it.staff > 0 ? charge * 0.8 : 0.15;
     var crownParts = it.litany > 0 ? (z.seq.litany || 0) : 0;
-    Art.king(g, Cc.x, Cc.y - 2, kingA, crownParts, C.zones.crypt.litany.every, litT);
+    B.king(g, Cc.x, Cc.y - 2, { shake: flash, seals: charge, defeat: curOpts.defeat || 0, crownParts: crownParts, crownTotal: C.zones.crypt.litany.every, crownTier: litT, time: time });
     if (bellT >= 6 && flash > 0.2) for (var mo = 0; mo < 10; mo++) Art.px(g, Cc.x + Math.cos(mo) * (1 - flash) * 20, Cc.y - 14 - (1 - flash) * 20 + Math.sin(mo * 2) * 6, '#c8c0d8');
     // Incienso de Vigilia: el hilo de humo recorre el círculo entre campanadas
     if (it.incense > 0) drawIncense(g, Cc, charge, incT, time, kingA);
 
     // campana
-    var bEvo = evoTier(v, 'bell', bellT, time); evoPillar(g, B.x, B.y, 20, bEvo, P.amber, time);
+    var bEvo = evoTier(v, 'bell', bellT, time); evoPillar(g, Bl.x, Bl.y, 20, bEvo, P.amber, time);
     ex.bellVel = (ex.bellVel || 0) + (-(ex.bellSwing || 0) * 40 - (ex.bellVel || 0) * 3) * dt;
     ex.bellSwing = (ex.bellSwing || 0) + ex.bellVel * dt;
     if (reduced) { ex.bellSwing = 0; ex.bellVel = 0; }
-    if (bEvo.tier >= 3) { g.globalAlpha = 0.25; Art.diamond(g, B.x, B.y + 11, 16, P.amber); g.globalAlpha = 1; }
-    Art.bell(g, B.x, B.y, bEvo.tier, ex.bellSwing);
-    if (bEvo.white) { g.globalAlpha = 0.7; Art.diamond(g, B.x, B.y + 10, 11, '#ffffff'); g.globalAlpha = 1; }
-    if (it.staff > 0) { var bx = B.x - 20, by = B.y + 28; Art.rect(g, bx - 1, by - 1, 42, 4, '#0c0812'); Art.rect(g, bx, by, Math.round(40 * charge), 2, charge > 0.85 ? P.amberL : P.amber); }
+    if (bEvo.tier >= 3) { g.globalAlpha = 0.25; Art.diamond(g, Bl.x, Bl.y + 11, 16, P.amber); g.globalAlpha = 1; }
+    Art.bell(g, Bl.x, Bl.y, bEvo.tier, ex.bellSwing);
+    if (bEvo.white) { g.globalAlpha = 0.7; Art.diamond(g, Bl.x, Bl.y + 10, 11, '#ffffff'); g.globalAlpha = 1; }
+    if (it.staff > 0) { var bx = Bl.x - 20, by = Bl.y + 28; Art.rect(g, bx - 1, by - 1, 42, 4, '#0c0812'); Art.rect(g, bx, by, Math.round(40 * charge), 2, charge > 0.85 ? P.amberL : P.amber); }
 
     drawCryptFx(g, v, st, time, bellT, litT);
 
@@ -740,14 +785,14 @@
 
   // Pulso y letanía: 7 lecturas de la campanada
   function drawCryptFx(g, v, st, time, bellT, litT) {
-    var Cz = L.crypt, Cc = Cz.circle, B = Cz.bell;
+    var Cz = L.crypt, Cc = Cz.circle, Bl = Cz.bell;
     sweep(v, function (e) {
       var a = time - e.t0; if (a < 0) return true; if (a > e.dur) return false;
       var p = a / e.dur;
       if (e.k === 'pulse') {
         if (a < 0.5) { // haz del círculo a la campana
           var al = 1 - a / 0.5; g.globalAlpha = al;
-          Art.rect(g, Cc.x - 2, B.y + 32, 4, Cc.y - B.y - 32, P.amber); Art.rect(g, Cc.x - 1, B.y + 32, 2, Cc.y - B.y - 32, P.amberL);
+          Art.rect(g, Cc.x - 2, Bl.y + 32, 4, Cc.y - Bl.y - 32, P.amber); Art.rect(g, Cc.x - 1, Bl.y + 32, 2, Cc.y - Bl.y - 32, P.amberL);
           if (e.conf) for (var k = 0; k < 40; k++) { var q = k / 40; Art.px(g, q * Cc.x, 70 + Math.sin(q * 6 + time * 8) * 4 + (Cc.y - 70) * q * q, k % 2 ? P.teal : P.tealW); }
           g.globalAlpha = 1;
         }
@@ -755,16 +800,17 @@
         var w = Math.min(1, a / 0.8);
         if (bellT <= 0 || bellT === 1 || bellT === 2) { // ondas simples / dobles / con runas
           var waves = bellT >= 1 ? 2 : 1;
-          for (var wv = 0; wv < waves; wv++) { var ww = Math.max(0, w - wv * 0.25); if (ww <= 0) continue; g.globalAlpha = 1 - ww; Art.ellipse(g, B.x, B.y + 11, 12 + ww * 50, 7 + ww * 25, P.amberL, 2); if (bellT === 2) Art.rune(g, B.x + (12 + ww * 50) - 2, B.y + 10, wv + 1, P.amberL); g.globalAlpha = 1; }
+          for (var wv = 0; wv < waves; wv++) { var ww = Math.max(0, w - wv * 0.25); if (ww <= 0) continue; g.globalAlpha = 1 - ww; Art.ellipse(g, Bl.x, Bl.y + 11, 12 + ww * 50, 7 + ww * 25, P.amberL, 2); if (bellT === 2) Art.rune(g, Bl.x + (12 + ww * 50) - 2, Bl.y + 10, wv + 1, P.amberL); g.globalAlpha = 1; }
         } else if (bellT === 3) { // tañe dos veces: eco
-          [0, 0.4].forEach(function (d) { var ww = Math.max(0, Math.min(1, (a - d) / 0.7)); if (ww <= 0 || ww >= 1) return; g.globalAlpha = 1 - ww; Art.ellipse(g, B.x, B.y + 11, 12 + ww * 55, 7 + ww * 28, d ? P.amber : P.amberL, 2); g.globalAlpha = 1; });
+          [0, 0.4].forEach(function (d) { var ww = Math.max(0, Math.min(1, (a - d) / 0.7)); if (ww <= 0 || ww >= 1) return; g.globalAlpha = 1 - ww; Art.ellipse(g, Bl.x, Bl.y + 11, 12 + ww * 55, 7 + ww * 28, d ? P.amber : P.amberL, 2); g.globalAlpha = 1; });
         } else if (bellT >= 4) { // anillo de runas que se expande hasta los muros
           var rr = 10 + w * 120; g.globalAlpha = 1 - w;
-          for (var ru = 0; ru < 12; ru++) { var an = ru / 12 * Math.PI * 2; Art.rune(g, B.x + Math.cos(an) * rr, B.y + 11 + Math.sin(an) * rr * 0.5, ru, P.amberL); }
+          for (var ru = 0; ru < 12; ru++) { var an = ru / 12 * Math.PI * 2; Art.rune(g, Bl.x + Math.cos(an) * rr, Bl.y + 11 + Math.sin(an) * rr * 0.5, ru, P.amberL); }
           g.globalAlpha = 1;
-          if (bellT >= 5 && a < 0.6) { g.globalAlpha = 1 - a / 0.6; Art.rect(g, B.x - 3, 0, 6, B.y, '#fff6e0'); g.globalAlpha = 1; }
+          if (bellT >= 5 && a < 0.6) { g.globalAlpha = 1 - a / 0.6; Art.rect(g, Bl.x - 3, 0, 6, Bl.y, '#fff6e0'); g.globalAlpha = 1; }
         }
-      } else if (e.k === 'litany') {
+      } else if (e.k === 'insig') drawCryptInsignia(g, v, e, a, time);
+      else if (e.k === 'litany') {
         v.extra.litany = e.t0;
         g.globalAlpha = 1 - p;
         var rings = litT >= 4 ? 3 : 1;
@@ -779,6 +825,323 @@
       }
       return true;
     });
+  }
+
+  // =====================================================================
+  // UTILIDADES v0.3: trayectoria de la chispa, penumbra de los insignia, derrota
+  // =====================================================================
+  // La chispa automática pasa sobre el cristal (canal) y golpea el pecho del ciervo.
+  function sparkPos(e, q) { var c = L.forest.crystalC; return bez(e.x0, e.y0, c.x, c.y - 30, e.x1, e.y1, q); }
+  // La luz baja un instante mientras un hechizo insignia se prepara y cruza el encuadre.
+  function dimOverlay(g, v, time) {
+    var dim = 0;
+    for (var i = 0; i < v.fx.length; i++) {
+      var e = v.fx[i]; if (e.k !== 'insig') continue;
+      var a = time - e.t0; if (a < 0 || a > e.dur) continue;
+      var up = Math.min(1, a / 0.3), down = Math.min(1, (e.dur - a) / 0.45);
+      dim = Math.max(dim, Math.min(up, down));
+    }
+    if (dim <= 0) return;
+    g.globalAlpha = dim * (reduced ? 0.15 : 0.5); Art.rect(g, 0, 0, W, H, '#000006'); g.globalAlpha = 1;
+  }
+  function defeatOverlay(g, zid, d) { if (d > 0.7) { g.globalAlpha = (d - 0.7) / 0.3 * 0.75; Art.rect(g, 0, 0, W, H, '#000000'); g.globalAlpha = 1; } }
+
+  // Insignia del bosque: la luz baja, se dibuja la trayectoria, el cometa cruza y enciende las astas.
+  function drawForestInsignia(g, v, e, a, time) {
+    var F = L.forest, tips = B.deerAntlerTips(F.deer.x, F.deer.y), aim = tips[3], t = e.tier || 0;
+    var sx = 8, sy = -6, cx = 90, cy = 6, prep = reduced ? 0.2 : 0.45, travel = reduced ? 0.4 : 0.55;
+    if (a < prep + travel) { // trayectoria punteada anticipada
+      g.globalAlpha = Math.min(1, a / prep) * 0.7;
+      for (var k = 0; k <= 40; k++) { if ((k + Math.floor(a * 20)) % 3) continue; var q = bez(sx, sy, cx, cy, aim[0], aim[1], k / 40); Art.rect(g, q[0], q[1], 2, 2, P.tealW); }
+      g.globalAlpha = 1;
+    }
+    if (a >= prep && a < prep + travel) {
+      var p = (a - prep) / travel, hd = bez(sx, sy, cx, cy, aim[0], aim[1], p);
+      var tail = t >= 1 ? 26 : 18, size = t >= 1 ? 4 : 3;
+      g.globalAlpha = 0.35; Art.diamond(g, hd[0], hd[1], size + 4, P.tealM); g.globalAlpha = 1;
+      for (var j = tail; j > 0; j--) { var tq = bez(sx, sy, cx, cy, aim[0], aim[1], Math.max(0, p - j * 0.012)); Art.rect(g, tq[0], tq[1] + (t >= 1 ? Math.sin(j * 0.6) : 0), j < tail / 2 ? 2 : 1, j < tail / 2 ? 2 : 1, j < tail / 3 ? P.tealW : j < tail * 0.7 ? P.teal : P.tealD); }
+      if (t >= 6) { Art.diamond(g, hd[0], hd[1], size + 1, '#ffffff'); Art.diamond(g, hd[0], hd[1], size - 1, '#05030c'); }
+      else { Art.diamond(g, hd[0], hd[1], size, P.teal); Art.diamond(g, hd[0], hd[1], size - 1, '#ffffff'); }
+      if (t >= 3) { var tw = bez(W - 8, sy, W - 40, cy, aim[0], aim[1], p); Art.diamond(g, tw[0], tw[1], 2, P.tealW); } // segundo cometa desde el lado opuesto
+    }
+    if (a >= prep + travel && !e.hit) {
+      e.hit = 1; v.extra.antler = time; v.extra.deerHit = time; v.deer = 1;
+      burst(v, aim[0], aim[1], P.tealW, reduced ? 4 : 18, 1.4);
+    }
+    if (e.hit && a < prep + travel + 0.5) { var r = (a - prep - travel) / 0.5; g.globalAlpha = 1 - r; Art.ellipse(g, aim[0], aim[1], 4 + r * 22, 3 + r * 14, P.tealW, 2); g.globalAlpha = 1; }
+  }
+  // Insignia de la jungla: la luz de la floración recorre las raíces hasta la boca de la Reina.
+  function drawJungleInsignia(g, v, e, a, time) {
+    var J = L.jungle, qh = B.queenHead(J.queen.x, J.queen.y), p = Math.min(1, a / (e.dur * 0.7));
+    var x0 = J.nodes[0], x1 = J.queen.x;
+    var hx = p < 0.7 ? x0 + (x1 - x0) * (p / 0.7) : x1, hy = p < 0.7 ? J.nodeY + 1 : J.queen.y - (J.queen.y - qh.y) * ((p - 0.7) / 0.3);
+    for (var k = 0; k < 8; k++) Art.px(g, hx - k * (p < 0.7 ? 3 : 0), hy + (p < 0.7 ? 0 : k * 3), k ? '#d8ff9a' : '#ffffff');
+    g.globalAlpha = 0.6; Art.diamond(g, hx, hy, 3, P.acid); g.globalAlpha = 1;
+    if (p >= 1 && !e.hit) { e.hit = 1; v.extra.queenHit = time; burst(v, qh.x - 8, qh.y, '#ffd0f0', reduced ? 4 : 16, 1.3); }
+  }
+  // Insignia de la cripta: la Gran Campanada barre la cripta, sacude la armadura del Rey.
+  function drawCryptInsignia(g, v, e, a, time) {
+    var Cz = L.crypt, B2 = Cz.bell, p = a / e.dur;
+    if (p > 0.15) { var w = (p - 0.15) / 0.85; g.globalAlpha = (1 - w) * 0.9; Art.ellipse(g, B2.x, B2.y + 12, 16 + w * 150, 8 + w * 70, '#fff6e0'); Art.ellipse(g, B2.x, B2.y + 12, 10 + w * 130, 6 + w * 60, P.amberL, 2); g.globalAlpha = 1; }
+    if (p < 0.25) { g.globalAlpha = 0.5; Art.rect(g, B2.x - 2, B2.y, 5, Cz.circle.y - B2.y, '#fff6e0'); g.globalAlpha = 1; }
+    if (p > 0.15 && !e.hit) { e.hit = 1; v.flash = time; v.extra.bellVel = (v.extra.bellVel || 0) + (reduced ? 0 : 14); }
+  }
+
+  // =====================================================================
+  // CASTILLO DEL INVIERNO INMÓVIL
+  // =====================================================================
+  function castleBg() {
+    var o = offscreen(), c = o[0], x = o[1], R = Art.rng(41);
+    gradient(x, ['#04080e', '#08121e', '#0c1a2a', '#10223a', '#142a44'], 0, 120);
+    for (var i = 0; i < 50; i++) Art.px(x, R() * W, R() * 70, R() > 0.7 ? '#e8f4ff' : '#5a7a9a'); // nieve en el aire
+    // salón helado: columnas de hielo y ventanales
+    [20, 96, 250].forEach(function (cx) { Art.rect(x, cx - 6, 10, 12, 110, '#1c3348'); Art.rect(x, cx - 6, 10, 2, 110, '#5a8ab0'); Art.rect(x, cx + 4, 10, 2, 110, '#0e1a28'); });
+    [[44, 20], [140, 16]].forEach(function (w) { Art.rect(x, w[0], w[1], 30, 46, '#0a1626'); for (var a = 0; a <= 15; a++) { var an = Math.PI * a / 15; Art.rect(x, w[0] + 15 - Math.cos(an) * 15 - 1, w[1] - Math.sin(an) * 9, 3, 2, '#0a1626'); } Art.rect(x, w[0] + 14, w[1], 2, 46, '#2f5878'); Art.rect(x, w[0], w[1] + 22, 30, 1, '#2f5878'); });
+    for (var k = 0; k < 18; k++) { var ix = R() * W, il = 3 + R() * 8; for (var j = 0; j < il; j++) Art.px(x, ix, 6 + j, j > il - 2 ? '#e8f4ff' : '#7fb8e0'); } // carámbanos del techo
+    Art.rect(x, 0, 120, W, H - 120, '#0c1824'); Art.rect(x, 0, 120, W, 1, '#7fb8e0');
+    for (i = 0; i < 70; i++) Art.px(x, R() * W, 121 + R() * 22, R() > 0.5 ? '#2a4a6a' : '#1a3048');
+    // alfombra quemada hasta el trono
+    for (var r = 0; r < 20; r++) Art.rect(x, 70 + r * 4, 122 + (r % 2), 3, 1, '#5a1a12');
+    return c;
+  }
+  function drawCastle(g, v, st, dt, time, simple) {
+    var K = L.castle, z = st.zones.castle, it = z.items, ex = v.extra, Hd = C.zones.castle.heat;
+    var m = S.model(st, 'castle'), pt = m.parts, cracks = z.seq.thaw || 0;
+    var crackPhase = pt.interval > 0 && isFinite(pt.interval) ? Math.min(1, (z.cyc.crack || 0) / pt.interval) : 0;
+    ex.lastCrack = cracks;
+    if (!simple && !reduced) for (var i = 0; i < 8; i++) Art.px(g, (i * 37 + time * (8 + i)) % W, (i * 23 + time * 14) % 118, '#e8f4ff');
+    dimOverlay(g, v, time);
+    var thawAge = time - (v.flash || -9), thaw = thawAge >= 0 && thawAge < 1.2 ? 1 - thawAge / 1.2 : 0;
+    var guideT = vt('castle', 'guide', it.guide), emT = vt('castle', 'embers', it.embers), hamT = vt('castle', 'hammer', it.hammer), phT = vt('castle', 'phoenix', it.phoenix);
+    B.regent(g, K.regent.x, K.regent.y, { cracks: cracks, target: it.lance > 0 ? cracks : -1, thaw: thaw, hit: Math.max(0, 1 - (time - (ex.regentHit || -9)) / 0.2), defeat: curOpts.defeat || 0, time: time });
+    // Grieta Guía: las grietas se ramifican (Nv 10) y la red completa brilla en su forma final
+    if (it.guide > 0 && guideT >= 1) B.regentParts(K.regent.x, K.regent.y).forEach(function (pp, k) { if (k < cracks) { Art.line(g, pp.x, pp.y, pp.x + 5, pp.y + 4, '#ff8a3a'); if (guideT >= 6 && k > 0) { var q = B.regentParts(K.regent.x, K.regent.y)[k - 1]; Art.line(g, q.x, q.y, pp.x, pp.y, '#ffb347', 2); } } });
+    // contador legible de la red de grietas
+    for (var s = 0; s < Hd.network; s++) Art.rect(g, K.regent.x - 18 + s * 6, 136, 4, 2, s < cracks ? '#ff6a2a' : '#2a3a4a');
+    // Lluvia de Ascuas: calor sostenido que cae sobre la coraza
+    var emRate = it.embers > 0 && it.lance > 0 ? Math.min(4, 0.5 + it.embers * 0.05) * (simple ? 0.5 : 1) : 0;
+    v.acc.spell += dt * emRate;
+    while (v.acc.spell >= 1) { v.acc.spell -= 1; add(v, { k: 'emberfall', x0: 150 + Math.random() * 100, dur: 0.9, tier: emT }); }
+    // lancero: gambesón, yelmo, brazal, lanza (foco) y mano libre
+    var rT = evoTier(v, 'robe', vt('castle', 'robe', it.robe), time), hT = evoTier(v, 'helm', it.helm > 0 ? vt('castle', 'helm', it.helm) : -1, time), lT = evoTier(v, 'lance', vt('castle', 'lance', it.lance), time);
+    var bob = reduced ? 0 : Math.round(Math.sin(time * 1.8) * 0.6), mx = K.mage.x, my = K.mage.y + bob, firing = time - v.fire < 0.2;
+    if (Math.max(rT.tier, lT.tier) >= 3) aura(g, mx + 8, my + 14, Math.max(rT.tier, lT.tier), time, '#ff8a3a');
+    evoPillar(g, mx + 8, my - 6, 30, rT, '#ff8a3a', time); evoPillar(g, mx + 28, my - 8, 30, lT, '#ffd98a', time); evoPillar(g, mx + 8, my - 8, 12, hT, '#ffb347', time);
+    var body = Art.lancer(rT.tier, firing || time - v.gesture < 0.3);
+    g.drawImage(rT.white ? Art.silhouette(body, 'lancer' + rT.tier) : body, mx, my);
+    if (hT.tier >= 0) Art.forgeHelm(g, mx, my, hT.tier, firing);
+    var tip = { x: K.hand.x + 24, y: K.hand.y - 8 };
+    if (it.lance > 0 || lT.e) tip = Art.lance(g, K.hand.x, K.hand.y + bob, lT.tier, time, crackPhase);
+    ex.tip = tip;
+    if (it.bracer > 0 && firing) { g.globalAlpha = 0.7; Art.diamond(g, K.hand.x, K.hand.y + bob, 2, '#ffb347'); g.globalAlpha = 1; }
+    gestureArm(g, v, K.free.x, K.free.y - 6 + bob, Art.lancerPalettes[Math.min(6, rT.tier)].m, time, P.skin);
+    var eEvo = evoTier(v, 'embers', emT, time); evoPillar(g, K.regent.x, 0, 60, eEvo, '#ff8a3a', time);
+    var pEvo = evoTier(v, 'phoenix', phT, time); evoPillar(g, K.regent.x + 30, 0, 50, pEvo, '#ffd98a', time);
+    if (!simple && it.robe > 0) { v.agg += m.passive * dt; v.acc.agg += dt; if (v.acc.agg >= 1.5) { if (v.agg > 0) floater('castle', '+' + A.fmt(v.agg), mx + 8, my - 10, 'ember'); v.agg = 0; v.acc.agg = 0; } }
+    sweep(v, function (e) {
+      var a = time - e.t0; if (a < 0) return true;
+      var over = a > e.dur; if (over && (e.k === 'part' || e.done)) return false;
+      var p = Math.min(1, a / e.dur); if (over) e.done = true;
+      var parts = B.regentParts(K.regent.x, K.regent.y);
+      if (e.k === 'fire') { // fuego automático desde la lanza hasta la pieza que se agrieta
+        var tp = parts[Math.max(0, (e.part + parts.length - 1) % parts.length)], t0 = ex.tip || tip;
+        var fx = t0.x + (tp.x - t0.x) * p, fy = t0.y + (tp.y - t0.y) * p - Math.sin(p * Math.PI) * 6;
+        for (var k = 1; k < 5; k++) Art.px(g, t0.x + (tp.x - t0.x) * Math.max(0, p - k * 0.05), t0.y + (tp.y - t0.y) * Math.max(0, p - k * 0.05) - Math.sin(Math.max(0, p - k * 0.05) * Math.PI) * 6, k < 2 ? '#ffd98a' : '#ff6a1a');
+        Art.diamond(g, fx, fy, lT.tier >= 2 ? 2 : 1, '#ffb347'); Art.px(g, fx, fy, '#ffffff');
+        if (p >= 1 && !e.hit) {
+          e.hit = 1; ex.regentHit = time; burst(v, tp.x, tp.y, '#ff8a3a', 5);
+          if (it.hammer > 0) add(v, { k: 'hammer', dur: 0.5, x: tp.x, y: tp.y, tier: hamT });
+        }
+      } else if (e.k === 'hammer') { // Martillo de Rescoldo: golpe extra en la grieta
+        g.globalAlpha = 1 - p;
+        var hits = e.tier >= 1 ? 2 : 1;
+        for (var hh = 0; hh < hits; hh++) { var hp = Math.max(0, p - hh * 0.3); Art.rect(g, e.x + 4 - Math.round(hp * 4), e.y - 8 + Math.round(hp * 6), 5, 3, '#c0c0c8'); Art.rect(g, e.x + 6, e.y - 5 + Math.round(hp * 6), 1, 5, '#5a3a20'); }
+        if (e.tier >= 2) Art.ellipse(g, e.x, e.y, 3 + p * 10, 2 + p * 6, '#ffb347', 2);
+        if (e.tier >= 3) Art.rune(g, e.x - 1, e.y - 1, Math.floor(time) % 6, '#ffd98a');
+        if (e.tier >= 4) Art.line(g, e.x - 12, e.y, e.x + 12, e.y, '#ff6a1a', 2);
+        if (e.tier >= 6) ex.regentHit = time;
+        g.globalAlpha = 1;
+      } else if (e.k === 'emberfall') { // ascuas: lecturas por estado
+        var tgt = parts[3], x0 = e.x0, y0 = -4, tt = e.tier;
+        var pos = tt >= 4 ? [tgt.x + Math.cos(p * 10) * 20 * (1 - p), tgt.y - 40 * (1 - p) + Math.sin(p * 10) * 6 * (1 - p)] : tt >= 2 ? bez(x0, y0, x0 - 40, 20, tgt.x, tgt.y, p) : [x0 + (tgt.x - x0) * p, y0 + (tgt.y - y0) * p];
+        var n = tt >= 1 ? 2 : 1;
+        for (var q = 0; q < n; q++) { Art.diamond(g, pos[0] + q * 5, pos[1] - q * 3, tt >= 3 ? 1 : 0, '#ff8a3a'); Art.px(g, pos[0] + q * 5, pos[1] - q * 3 - 2, '#ffd98a'); }
+        if (tt >= 5 && p < 0.2) { g.globalAlpha = 0.12; Art.rect(g, 140, 0, 116, 60, '#ff6a1a'); g.globalAlpha = 1; }
+        if (p >= 1 && !e.hit) { e.hit = 1; burst(v, tgt.x, tgt.y, '#ffb347', tt >= 6 ? 10 : 2); if (tt >= 6) { g.globalAlpha = 0.6; Art.diamond(g, tgt.x, tgt.y, 6, '#fff0c0'); g.globalAlpha = 1; } }
+      } else if (e.k === 'ember') { // ascua manual: nace de la mano libre
+        var exx = e.x0 + (e.x1 - e.x0) * p, eyy = e.y0 + (e.y1 - e.y0) * p - Math.sin(p * Math.PI) * 16;
+        Art.star(g, exx, eyy, '#ffd98a', true); Art.px(g, exx - 2, eyy + 1, '#ff6a1a');
+        if (p >= 1 && !e.hit) { e.hit = 1; ex.regentHit = time; burst(v, e.x1, e.y1, '#ffd98a', 8); }
+      } else if (e.k === 'insig') { // Insignia: deshielo. La lanza carga, una lanza de fuego cruza y la coraza estalla en vapor.
+        var rg = K.regent, prep = reduced ? 0.25 : 0.5, t1 = ex.tip || tip, tgt2 = parts[3];
+        if (a < prep) { g.globalAlpha = a / prep; Art.diamond(g, t1.x, t1.y, 2 + Math.round(a / prep * 4), '#fff0c0'); for (var kk = 0; kk <= 24; kk++) if (kk % 3 === 0) Art.px(g, t1.x + (tgt2.x - t1.x) * kk / 24, t1.y + (tgt2.y - t1.y) * kk / 24, '#ffd98a'); g.globalAlpha = 1; }
+        else if (a < prep + 0.3) { var q3 = (a - prep) / 0.3; Art.line(g, t1.x, t1.y, t1.x + (tgt2.x - t1.x) * q3, t1.y + (tgt2.y - t1.y) * q3, '#ffffff', 1); Art.line(g, t1.x, t1.y - 1, t1.x + (tgt2.x - t1.x) * q3, t1.y - 1 + (tgt2.y - t1.y) * q3, '#ffb347'); Art.line(g, t1.x, t1.y + 1, t1.x + (tgt2.x - t1.x) * q3, t1.y + 1 + (tgt2.y - t1.y) * q3, '#ff6a1a'); }
+        else if (!e.hit) { e.hit = 1; ex.regentHit = time; burst(v, tgt2.x, tgt2.y, '#e8f4ff', reduced ? 4 : 20, 1.5); burst(v, tgt2.x, tgt2.y, '#ffb347', reduced ? 2 : 10); }
+        if (it.phoenix > 0 && a > prep * 0.5) drawPhoenix(g, (a - prep * 0.5) / (e.dur - prep * 0.5), phT, rg);
+      }
+      return !over;
+    });
+  }
+  // Fénix del Deshielo: siete lecturas de su vuelo durante el deshielo
+  function drawPhoenix(g, p, t, rg) {
+    p = Math.max(0, Math.min(1, p));
+    var tx = rg.x, ty = rg.y - 60, x, y;
+    if (t >= 3) { var an = p * Math.PI * 3; x = tx + Math.cos(an) * 30 * (1 - p); y = ty - 10 + Math.sin(an) * 12 * (1 - p); }
+    else if (t >= 2) { x = 120 + (tx - 120) * p; y = 10 + (ty - 10) * p * p; }
+    else { x = 110 + (tx - 110) * p; y = 30 + (ty - 30) * p; }
+    var wing = Math.round(Math.sin(p * 30) * 3), col = t >= 5 ? '#fff0c0' : '#ff8a3a';
+    Art.diamond(g, x, y, 1, '#ffd98a');
+    Art.line(g, x, y, x - 6, y - 3 + wing, col); Art.line(g, x, y, x + 6, y - 3 + wing, col);
+    if (t >= 1) { Art.line(g, x - 6, y - 3 + wing, x - 10, y + wing, col); Art.line(g, x + 6, y - 3 + wing, x + 10, y + wing, col); }
+    if (t >= 4) for (var k = 1; k < 6; k++) Art.px(g, x - k * 2, y + k, '#ff6a1a');
+    if (t >= 6 && p > 0.8) { g.globalAlpha = 0.5; Art.diamond(g, tx, ty + 20, 10, '#fff0c0'); g.globalAlpha = 1; }
+  }
+
+  // =====================================================================
+  // CAVERNAS DEL SOL SEPULTADO
+  // =====================================================================
+  function cavernsBg() {
+    var o = offscreen(), c = o[0], x = o[1], R = Art.rng(53);
+    gradient(x, ['#060202', '#0e0504', '#160806', '#1e0a06', '#260c06'], 0, 130);
+    // estalactitas y paredes de basalto
+    for (var i = 0; i < 22; i++) { var sx = R() * W, sl = 6 + R() * 20; for (var j = 0; j < sl; j++) { var w = Math.max(0, Math.round((sl - j) / sl * 3)); Art.rect(x, sx - w, j, w * 2 + 1, 1, j % 5 ? '#1a0c08' : '#2a140c'); } }
+    for (i = 0; i < 40; i++) Art.px(x, R() * W, 20 + R() * 90, R() > 0.8 ? '#5a2410' : '#2a1008');
+    // ríos de lava al fondo
+    for (var lx = 0; lx < W; lx++) { var ly = 112 + Math.round(Math.sin(lx / 13) * 2); Art.px(x, lx, ly, '#ff6a1a'); Art.px(x, lx, ly + 1, '#b03a08'); }
+    Art.rect(x, 0, 120, W, H - 120, '#120604'); Art.rect(x, 0, 120, W, 1, '#4a1a0a');
+    for (i = 0; i < 60; i++) Art.px(x, R() * W, 121 + R() * 22, R() > 0.6 ? '#2a0e06' : '#1a0804');
+    // hielo bajo los pies de la maga
+    for (var ix = 10; ix < 80; ix++) Art.px(x, ix, 120, ix % 3 ? '#9fd8ff' : '#e8f8ff');
+    return c;
+  }
+  function icePos(i, n) { var span = Math.max(1, n - 1); return { x: 92 + (n === 1 ? 20 : i * 40 / span), y: 30 + Math.abs(i - span / 2) * 10 }; }
+  function drawCaverns(g, v, st, dt, time, simple) {
+    var V = L.caverns, z = st.zones.caverns, it = z.items, ex = v.extra, Bm = C.zones.caverns.beams;
+    var m = S.model(st, 'caverns'), pt = m.parts;
+    var ph = (z.cyc.eye || 0), winStart = Bm.eyeInterval - pt.window, inWindow = it.mirror > 0 && ph >= winStart;
+    var flinch = Math.max(0, 1 - (time - (v.flash || -9)) / 0.5);
+    var eyeOpen = inWindow ? 1 : 0.15 + (ph / Bm.eyeInterval) * 0.4;
+    if (!simple && !reduced) for (var i = 0; i < 6; i++) { var ey = 118 - ((time * (10 + i * 3) + i * 30) % 100); Art.px(g, 20 + i * 40 + Math.sin(time + i) * 4, ey, '#ff8a3a'); } // brasas que suben
+    dimOverlay(g, v, time);
+    var lensT = vt('caverns', 'lens', it.lens), shT = vt('caverns', 'shards', it.shards), gzT = vt('caverns', 'gaze', it.gaze), znT = vt('caverns', 'zenith', it.zenith);
+    B.colossus(g, V.eye.x, V.eye.y, { eye: curOpts.defeat ? 0 : eyeOpen, flinch: flinch, hand: inWindow ? 1 : flinch, defeat: curOpts.defeat || 0, time: time });
+    if (gzT >= 6 && inWindow) Art.ellipse(g, V.eye.x, V.eye.y, 20, 14, '#bfe6ff', 2); // el ojo queda abierto, cercado de hielo
+    if (znT >= 1 && inWindow) { g.globalAlpha = 0.3; Art.rect(g, V.eye.x - 30, 0, 4, V.eye.y, '#bfe6ff'); Art.rect(g, V.eye.x + 26, 0, 4, V.eye.y, '#bfe6ff'); g.globalAlpha = 1; }
+    if (znT >= 3 && inWindow) Art.star(g, V.eye.x, V.eye.y - 24, '#ffffff', true);
+    if (znT >= 6 && inWindow) { g.globalAlpha = 0.5; Art.diamond(g, V.eye.x, V.eye.y, 10, '#e8f8ff'); g.globalAlpha = 1; }
+    // maga glaciar con espejo de obsidiana (foco), diadema y colgante
+    var rT = evoTier(v, 'robe', vt('caverns', 'robe', it.robe), time), hT = evoTier(v, 'diadem', it.diadem > 0 ? vt('caverns', 'diadem', it.diadem) : -1, time), mT = evoTier(v, 'mirror', vt('caverns', 'mirror', it.mirror), time);
+    var bob = reduced ? 0 : Math.round(Math.sin(time * 1.5) * 0.6), mx = V.mage.x, my = V.mage.y + bob;
+    if (Math.max(rT.tier, mT.tier) >= 3) aura(g, mx + 8, my + 14, Math.max(rT.tier, mT.tier), time, '#9fd8ff');
+    evoPillar(g, mx + 8, my - 6, 30, rT, '#9fd8ff', time); evoPillar(g, V.mirror.x, V.mirror.y - 20, 20, mT, '#e8f8ff', time); evoPillar(g, mx + 8, my - 8, 12, hT, '#a0ffd8', time);
+    var body = Art.glacial(rT.tier, inWindow || time - v.gesture < 0.3);
+    g.drawImage(rT.white ? Art.silhouette(body, 'glacial' + rT.tier) : body, mx, my);
+    if (hT.tier >= 0) Art.glacialDiadem(g, mx, my, hT.tier, inWindow);
+    if (it.pendant > 0) { Art.px(g, mx + 9, my + 9, inWindow ? '#ffffff' : '#9fd8ff'); }
+    var mirY = V.mirror.y - 8 + bob + (reduced ? 0 : Math.round(Math.sin(time * 2))), mirX = V.mirror.x;
+    if (it.mirror > 0 || mT.e) Art.obsidianMirror(g, mirX, mirY, mT.tier, time, inWindow ? 1 : 0.3);
+    // haces simultáneos: principal y uno por cada espejo de hielo
+    if (it.mirror > 0) {
+      var width = (lensT >= 1 ? 2 : 1) + (inWindow ? 1 : 0), core = lensT >= 6 ? '#ffffff' : '#e8f8ff', edge = lensT >= 3 ? '#a0ffd8' : '#7fc8f0';
+      beam(g, mirX + 3, mirY, V.eye.x - 10, V.eye.y, width, core, edge, time, lensT);
+      var n = Math.min(6, it.shards);
+      for (var s = 0; s < n; s++) {
+        var ip = icePos(s, n);
+        Art.line(g, mirX + 3, mirY - 2, ip.x, ip.y, '#4a7a9a', 3);
+        beam(g, ip.x, ip.y, V.eye.x - 8, V.eye.y - 2 + s, Math.max(1, width - 1), core, edge, time, lensT);
+        drawIce(g, ip.x, ip.y, shT, time);
+      }
+      if (lensT >= 4 && !reduced) for (var c2 = 0; c2 < 4; c2++) Art.px(g, mirX + (V.eye.x - mirX) * ((time * 0.7 + c2 * 0.25) % 1), mirY + (V.eye.y - mirY) * ((time * 0.7 + c2 * 0.25) % 1) - 3, '#ffffff');
+    }
+    gestureArm(g, v, V.free.x, V.free.y - 6 + bob, Art.glacialPalettes[Math.min(6, rT.tier)].c, time, '#d8c8c0');
+    var lEvo = evoTier(v, 'lens', lensT, time); evoPillar(g, (mirX + V.eye.x) / 2, 0, 60, lEvo, '#e8f8ff', time);
+    var zEvo = evoTier(v, 'zenith', znT, time); evoPillar(g, V.eye.x, 0, V.eye.y, zEvo, '#bfe6ff', time);
+    if (!simple && pt.beams > 0) { v.agg += m.passive * dt; v.acc.agg += dt; if (v.acc.agg >= 1.2) { if (v.agg > 0) floater('caverns', '+' + A.fmt(v.agg), V.eye.x - 30, V.eye.y + 30, 'ice'); v.agg = 0; v.acc.agg = 0; } }
+    sweep(v, function (e) {
+      var a = time - e.t0; if (a < 0) return true;
+      var over = a > e.dur; if (over && (e.k === 'part' || e.done)) return false;
+      var p = Math.min(1, a / e.dur); if (over) e.done = true;
+      if (e.k === 'breath') { // soplo helado manual desde la mano libre
+        var bx = e.x0 + (e.x1 - e.x0) * p, by = e.y0 + (e.y1 - e.y0) * p;
+        for (var k = 0; k < 6; k++) Art.px(g, bx - k * 3, by + Math.sin(k + p * 10) * 2, k ? '#bfe6ff' : '#ffffff');
+        if (p >= 1 && !e.hit) { e.hit = 1; v.flash = Math.max(v.flash || 0, time - 0.3); burst(v, e.x1 - 10, e.y1, '#e8f8ff', 6); }
+      } else if (e.k === 'insig') { // Insignia: la mirada del ojo. Los haces convergen en una cruz de frío.
+        var cx = V.eye.x, cy = V.eye.y, q = Math.min(1, a / (e.dur * 0.6));
+        g.globalAlpha = Math.sin(Math.min(1, a / e.dur) * Math.PI);
+        Art.rect(g, cx - 1, cy - 30 * q, 3, 60 * q, '#ffffff'); Art.rect(g, cx - 40 * q, cy - 1, 80 * q, 3, '#e8f8ff');
+        Art.ellipse(g, cx, cy, 8 + q * 20, 6 + q * 14, '#a0ffd8', 2);
+        g.globalAlpha = 1;
+        if (q >= 1 && !e.hit) { e.hit = 1; burst(v, cx, cy, '#e8f8ff', reduced ? 4 : 18, 1.5); }
+      }
+      return !over;
+    });
+  }
+  function beam(g, x0, y0, x1, y1, w, core, edge, time, t) {
+    for (var k = -w; k <= w; k++) Art.line(g, x0, y0 + k, x1, y1 + k, Math.abs(k) === w ? edge : core);
+    if (t >= 2 && !reduced) for (var s = 0; s < 12; s++) { var q = s / 12; Art.px(g, x0 + (x1 - x0) * q, y0 + (y1 - y0) * q + Math.sin(q * 20 + time * 8) * (w + 1), edge); }
+    if (t >= 5) { g.globalAlpha = 0.3; Art.line(g, x0, y0 - 6, x1, y1 - 6, '#a0ffd8', 2); g.globalAlpha = 1; }
+  }
+  function drawIce(g, x, y, t, time) {
+    var h = t >= 6 ? 6 : 4;
+    for (var r = -h; r <= h; r++) { var w = Math.round((h - Math.abs(r)) * 0.6); Art.rect(g, x - w, y + r, w * 2 + 1, 1, r < 0 ? '#e8f8ff' : '#9fd8ff'); }
+    Art.px(g, x, y - h - 1, '#ffffff');
+    if (t >= 6) Art.px(g, x, y - h - 3, '#a0ffd8');
+  }
+
+  // =====================================================================
+  // MESA REDONDA (Sala de la Orden): los magos despertados alrededor de la mesa
+  // =====================================================================
+  Scene.drawTable = function (canvas, st, tMs) {
+    var g = canvas.getContext('2d'), time = tMs / 1000;
+    g.imageSmoothingEnabled = false;
+    g.fillStyle = '#0c0a10'; g.fillRect(0, 0, W, H);
+    for (var y = 0; y < H; y += 6) for (var x = (y / 6 % 2) * 6; x < W; x += 12) { Art.rect(g, x, y, 11, 5, '#18141e'); Art.rect(g, x, y, 11, 1, '#221c2a'); }
+    // velas y estandartes
+    [[30, 40], [226, 40]].forEach(function (c, i) { var fl = reduced ? 0 : Math.round(Math.sin(time * 9 + i) * 0.7); Art.rect(g, c[0], c[1], 3, 10, '#d8cbb0'); Art.px(g, c[0] + 1, c[1] - 2 + fl, P.amberL); g.globalAlpha = 0.15; Art.diamond(g, c[0] + 1, c[1] - 2, 8, P.amber); g.globalAlpha = 1; });
+    // mesa redonda (elipse en perspectiva) con el sello del Umbral
+    var cx = 128, cy = 96;
+    for (var r = 0; r <= 26; r++) { var w = Math.round(84 * Math.sqrt(1 - (r - 13) * (r - 13) / 169)); Art.rect(g, cx - w, cy - 13 + r, w * 2, 1, r < 3 ? '#5a3a24' : '#3a2416'); }
+    Art.rect(g, cx - 70, cy + 13, 140, 8, '#24160c');
+    Art.ellipse(g, cx, cy, 30, 8, '#7a5a3a', 2); Art.rune(g, cx - 1, cy - 1, 2, P.amberL);
+    // cristal de los Ecos sobre la mesa
+    var bobE = reduced ? 0 : Math.round(Math.sin(time * 1.4) * 2);
+    g.globalAlpha = 0.3; Art.diamond(g, cx, cy - 26 + bobE, 9, P.violetL); g.globalAlpha = 1;
+    Art.diamond(g, cx, cy - 26 + bobE, 4, P.violet); Art.diamond(g, cx, cy - 26 + bobE, 2, '#ffffff');
+    // magos despertados alrededor (detrás y delante de la mesa)
+    var seats = [{ z: 'forest', x: 54, y: 62 }, { z: 'jungle', x: 92, y: 52 }, { z: 'crypt', x: 148, y: 52 }, { z: 'castle', x: 186, y: 62 }, { z: 'caverns', x: 120, y: 104 }];
+    seats.forEach(function (s) {
+      if (!S.isOpen(st, s.z)) { g.globalAlpha = 0.25; Art.rect(g, s.x + 4, s.y + 10, 8, 14, '#2a2430'); g.globalAlpha = 1; return; } // asiento vacío
+      var it = st.zones[s.z].items, t = function (id) { return S.visualTier(s.z, id, it[id]); };
+      if (s.z === 'forest') { g.drawImage(Art.apprentice(t('robe'), it.hood > 0 ? t('hood') : -1), s.x, s.y); if (it.staff) g.drawImage(Art.forestStaff(t('staff')), s.x + 11, s.y - 8); }
+      if (s.z === 'jungle') { g.drawImage(Art.herbalist(t('robe')), s.x, s.y); if (it.grimoire) Art.grimoire(g, s.x + 12, s.y - 2, t('grimoire'), 0, time, false); }
+      if (s.z === 'crypt') { g.drawImage(Art.mage(t('vest'), it.mitre > 0), s.x, s.y); if (it.staff) g.drawImage(Art.cryptStaff(t('staff')), s.x - 2, s.y - 8); }
+      if (s.z === 'castle') { g.drawImage(Art.lancer(t('robe')), s.x, s.y); if (it.lance) Art.lance(g, s.x + 2, s.y + 10, t('lance'), time, 0); }
+      if (s.z === 'caverns') { g.drawImage(Art.glacial(t('robe')), s.x, s.y); if (it.mirror) Art.obsidianMirror(g, s.x + 20, s.y + 6, t('mirror'), time, 0.4); }
+    });
+    Art.rect(g, cx - 84, cy + 2, 168, 1, '#5a3a24'); // borde delantero de la mesa sobre los asientos traseros
+  };
+
+  // Iconos de la tienda para las zonas nuevas
+  function drawIconNew(x, zid, id, t) {
+    if (zid === 'castle') {
+      if (id === 'lance') Art.lance(x, 2, 22, t, 1.3, 0);
+      if (id === 'robe') x.drawImage(Art.lancer(t), 0, 8, 16, 16, 4, 8, 16, 16);
+      if (id === 'helm') { x.drawImage(Art.lancer(0), 0, 0, 16, 10, 4, 14, 16, 10); Art.forgeHelm(x, 4, 14, t, false); }
+      if (id === 'bracer') { Art.rect(x, 8, 12, 8, 5, '#5a3a2a'); Art.rect(x, 8, 12, 8, 1, t >= 1 ? '#ffb347' : '#8a5a3a'); if (t >= 2) Art.px(x, 12, 14, '#ffd98a'); }
+      if (id === 'embers') for (var k = 0; k < 3 + t; k++) Art.diamond(x, 5 + (k * 7) % 14, 5 + (k * 5) % 18, k % 2, '#ff8a3a');
+      if (id === 'hammer') { Art.rect(x, 7, 6, 10, 5, '#c0c0c8'); Art.rect(x, 11, 11, 2, 12, '#5a3a20'); if (t >= 2) Art.ellipse(x, 12, 8, 9, 5, '#ffb347', 2); }
+      if (id === 'guide') { Art.line(x, 4, 4, 12, 14, '#ff6a2a'); Art.line(x, 12, 14, 20, 10, '#ff6a2a'); Art.line(x, 12, 14, 10, 24, '#ffb347'); if (t >= 1) Art.line(x, 12, 14, 18, 22, '#ff8a3a'); }
+      if (id === 'phoenix') { Art.diamond(x, 12, 14, 2, '#ffd98a'); Art.line(x, 12, 14, 3, 8, '#ff8a3a'); Art.line(x, 12, 14, 21, 8, '#ff8a3a'); if (t >= 1) { Art.line(x, 3, 8, 1, 14, '#ff6a1a'); Art.line(x, 21, 8, 23, 14, '#ff6a1a'); } }
+    } else {
+      if (id === 'mirror') Art.obsidianMirror(x, 12, 14, t, 1.3, 0.5);
+      if (id === 'robe') x.drawImage(Art.glacial(t), 0, 8, 16, 16, 4, 8, 16, 16);
+      if (id === 'diadem') { x.drawImage(Art.glacial(0), 0, 0, 16, 10, 4, 14, 16, 10); Art.glacialDiadem(x, 4, 14, t, false); }
+      if (id === 'pendant') { Art.line(x, 7, 6, 12, 13, '#7fb8e0'); Art.line(x, 17, 6, 12, 13, '#7fb8e0'); Art.diamond(x, 12, 15, 2, t >= 2 ? '#a0ffd8' : '#9fd8ff'); }
+      if (id === 'shards') for (var s = 0; s < Math.max(1, Math.min(6, t >= 6 ? 6 : 3)); s++) drawIce(x, 4 + s * 4, 10 + (s % 2) * 6, t, 0);
+      if (id === 'lens') { Art.line(x, 2, 22, 22, 6, '#e8f8ff', 0); Art.line(x, 2, 23, 22, 7, '#7fc8f0'); if (t >= 2) Art.line(x, 2, 20, 22, 4, '#a0ffd8', 2); }
+      if (id === 'gaze') { Art.ellipse(x, 12, 14, 9, t >= 6 ? 6 : 4, '#ffb347'); Art.rect(x, 11, 11, 2, 6, '#1a0604'); if (t >= 6) Art.ellipse(x, 12, 14, 10, 7, '#bfe6ff', 2); }
+      if (id === 'zenith') { Art.rect(x, 6, 2, 3, 24, '#bfe6ff'); Art.rect(x, 16, 2, 3, 24, '#bfe6ff'); if (t >= 3) Art.star(x, 12, 6, '#ffffff', true); }
+    }
   }
 
   // ---------- Comunes ----------
@@ -811,7 +1174,8 @@
   Scene.drawIcon = function (canvas, zid, id, tier) {
     var x = canvas.getContext('2d'); x.imageSmoothingEnabled = false;
     x.clearRect(0, 0, canvas.width, canvas.height);
-    x.fillStyle = { forest: '#08202a', jungle: '#0a1a0c', crypt: '#1d1429' }[zid]; x.fillRect(0, 0, canvas.width, canvas.height);
+    x.fillStyle = { forest: '#08202a', jungle: '#0a1a0c', crypt: '#1d1429', castle: '#0e1a28', caverns: '#1a0a06' }[zid]; x.fillRect(0, 0, canvas.width, canvas.height);
+    if (zid === 'castle' || zid === 'caverns') { drawIconNew(x, zid, id, tier); return; }
     var t = tier, tm = 1.3;
     if (zid === 'forest') {
       if (id === 'staff') x.drawImage(Art.forestStaff(t), 0, 0, 7, 28, 9, 0, 7, 28);

@@ -26,7 +26,7 @@ const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'orden-perfil-'));
 const base = ['--headless=new', '--disable-gpu', '--hide-scrollbars', '--no-first-run', '--user-data-dir=' + profile];
 
 let failed = false;
-if (!args.includes('--solo-capturas') && !args.includes('--solo-tiras')) {
+if (!args.includes('--solo-capturas') && !args.includes('--solo-tiras') && !args.includes('--responsive')) {
   const dom = execFileSync(browser, base.concat(['--virtual-time-budget=20000', '--dump-dom', url('#autotest')]), { encoding: 'utf8', maxBuffer: 1 << 26 });
   const m = dom.match(/<pre id="autotest-results">([\s\S]*?)<\/pre>/);
   if (!m) { console.log('No se obtuvo resultado de la prueba en navegador.'); failed = true; }
@@ -43,16 +43,34 @@ const shot = (hash, w, h, out, budget) => {
   execFileSync(browser, base.concat([`--window-size=${w},${h}`, `--virtual-time-budget=${budget || 2500}`, '--screenshot=' + out, url(hash)]), { stdio: 'ignore' });
   console.log('captura: ' + out);
 };
-if (!args.includes('--solo-test') && !args.includes('--solo-tiras')) {
+if (!args.includes('--solo-test') && !args.includes('--solo-tiras') && !args.includes('--responsive')) {
   fs.mkdirSync(outDir, { recursive: true });
-  const scenes = ['bosque1', 'bosque10', 'bosque50', 'bosque150', 'jungla1', 'jungla10', 'jungla100', 'cripta1', 'cripta10', 'cripta100', 'sala1', 'sala50', 'sala250',
-    'evo-forest-staff-10', 'evo-jungle-sickle-50', 'evo-crypt-chalk-24'];
-  for (const name of scenes) shot('#escena=' + name, 1400, 900, path.join(outDir, name + '.png'), name.startsWith('evo-') ? 900 : 2500);
+  const scenes = ['bosque1', 'bosque10', 'bosque150', 'jungla10', 'jungla100', 'cripta10', 'cripta100', 'castillo1', 'castillo10', 'castillo100', 'cavernas10', 'cavernas100', 'sala1', 'sala10', 'sala250', 'mesa10',
+    'evo-forest-staff-10', 'evo-castle-guide-17', 'evo-caverns-shards-6', 'evo-crypt-chalk-24'];
+  for (const name of scenes) shot('#escena=' + name, 1366, 768, path.join(outDir, name + '.png'), name.startsWith('evo-') ? 900 : 2500);
+  // Hojas de jefes (reposo, impacto, insignia, derrota, portal) y de fases de los hechizos insignia
+  shot('#jefes', 1720, 1320, path.join(outDir, 'jefes.png'), 2000);
+  shot('#insignias', 1700, 800, path.join(outDir, 'insignias.png'), 2000);
   // Vista estrecha real: dos marcos de 360 px (la ventana headless no baja de ~500 px)
   const movil = path.join(outDir, 'movil-360.png');
   execFileSync(browser, base.concat(['--window-size=760,900', '--virtual-time-budget=2500', '--screenshot=' + movil,
     'file:///' + path.join(root, 'tests', 'movil.html').split(path.sep).join('/')]), { stdio: 'ignore' });
   console.log('captura: ' + movil);
+}
+// Responsive: tamaños de notebook y escritorio, zoom 125 % (factor de escala del dispositivo) y móvil
+if (args.includes('--responsive')) {
+  const dir = path.join(outDir, 'responsive'); fs.mkdirSync(dir, { recursive: true });
+  // El zoom del navegador al 125 % se emula con el viewport CSS equivalente (en headless el factor de escala no lo cambia)
+  const sizes = [[1280, 720, 1], [1366, 768, 1], [1536, 864, 1], [1920, 1080, 1], [1229, 691, 1.25]];
+  for (const [w, h, z] of sizes) for (const sc of ['sala10', 'mesa10', 'castillo10', 'confirmar10', 'refundacion10']) {
+    const tag = z !== 1 ? `1536x864-zoom125(css ${w}x${h})-${sc}` : `${w}x${h}-${sc}`;
+    const extra = [];
+    const dom = execFileSync(browser, base.concat(extra, [`--window-size=${w},${h}`, '--virtual-time-budget=2500', '--dump-dom', url('#escena=' + sc)]), { encoding: 'utf8', maxBuffer: 1 << 26 });
+    const title = (dom.match(/<title>([^<]*)/) || [])[1] || '';
+    execFileSync(browser, base.concat(extra, [`--window-size=${w},${h}`, '--virtual-time-budget=2500', '--screenshot=' + path.join(dir, tag + '.png'), url('#escena=' + sc)]), { stdio: 'ignore' });
+    const m = title.match(/vw=(\d+)x(\d+) scrollW=(\d+)/);
+    console.log(`${tag.padEnd(36)} ${title.replace(/^ESCENA \S+/, '')}${m && +m[3] > +m[1] ? '  ⚠ SCROLL HORIZONTAL' : ''}`);
+  }
 }
 // Hojas de contacto de animación: filas = estados visuales, columnas = cuadros sucesivos
 if (args.includes('--tiras') || args.includes('--solo-tiras')) {

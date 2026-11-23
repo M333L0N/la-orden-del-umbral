@@ -4,19 +4,25 @@
   var A = root.Arcane = root.Arcane || {};
   var C = A.CONFIG, S = A.Sim, Save = A.Save, UI = A.UI, Scene = A.Scene;
   var ZONES = C.zoneOrder;
-  var FOCUS = { forest: 'staff', jungle: 'grimoire', crypt: 'staff' };
+  var FOCUS = { forest: 'staff', jungle: 'grimoire', crypt: 'staff', castle: 'lance', caverns: 'mirror' };
+  var INTRO = {
+    jungle: ['La herborista despierta', 'Marca raíces a mano hasta conseguir su grimorio', 'En la jungla, una herborista de poda corta las raíces de la Reina Injerto. Su moneda es la <b>savia de la jungla</b>.'],
+    crypt: ['La maga despierta', 'Traza sellos a mano hasta conseguir su propio báculo', 'En la cripta, una maga despierta frente al Rey sin Réquiem. Su moneda es el <b>maná de la cripta</b>.'],
+    castle: ['El lancero despierta', 'Lanza ascuas a mano hasta conseguir su lanza', 'En el castillo, un lancero de brasas desafía a la Regente de Escarcha. El calor abre grietas en su coraza; al completar la red, deshielo. Su moneda es la <b>brasa del castillo</b>.'],
+    caverns: ['La maga glaciar despierta', 'Sopla frío a mano hasta conseguir su espejo de obsidiana', 'En las cavernas, una maga glaciar concentra frío contra el Corazón de la Caldera. Cada 30 s su ojo se abre. Su moneda es la <b>escarcha de las cavernas</b>.']
+  };
 
   var G = A.Game = {
-    state: null, zone: 'forest', view: 'forest', panel: 'items', reduced: false,
-    lastSaved: 0, anomaly: null, nextAnomalyAt: 0, noOverwrite: false, frames: 0,
+    state: null, zone: 'forest', view: 'forest', roomTab: 'portals', panel: 'items', reduced: false,
+    lastSaved: 0, anomaly: null, nextAnomalyAt: 0, noOverwrite: false, frames: 0, refounding: false, cameFromZone: false,
     now: function () { return Date.now(); }
   };
 
   // Modo de prueba automática: usa otra clave de guardado para no tocar la partida real.
-  var AUTOTEST = /autotest|escena=|tira=/.test(location.hash);
+  var AUTOTEST = /autotest|escena=|tira=|jefes|insignias/.test(location.hash);
   if (AUTOTEST) C.saveKey = 'ordenUmbral.autotest';
 
-  // ---------- Arranque (incluye migración v0.1 → v0.2) ----------
+  // ---------- Arranque (incluye migraciones) ----------
   G.boot = function () {
     var now = G.now(), raw = Save.readRaw(), rep = null;
     G.state = null; G.noOverwrite = false;
@@ -29,7 +35,7 @@
           if (!Save.backupOriginal(raw, r.migratedFrom)) {
             G.noOverwrite = true;
             UI.notice('No se pudo guardar una copia de tu partida v0.' + r.migratedFrom + ' en este navegador, así que <b>no se sobrescribirá</b>. Puedes jugar, pero exporta (Partida → Exportar JSON) para conservar el progreso.');
-          } else UI.log('Tu partida v0.' + r.migratedFrom + ' se actualizó. La copia original está en Partida → «Exportar copia v0.1».');
+          } else UI.log('Tu partida v0.' + r.migratedFrom + ' se actualizó. La copia original está en Partida → «Exportar copia v0.' + r.migratedFrom + '».');
         }
         G.state = r.state;
         rep = Save.applyOffline(G.state, now);
@@ -46,6 +52,7 @@
     if (!G.state) G.state = S.newState(null, now);
     var v = G.state.settings.view;
     G.view = (v === 'room' || (ZONES.indexOf(v) >= 0 && S.isOpen(G.state, v))) ? v : 'forest';
+    G.roomTab = G.state.settings.roomTab === 'table' ? 'table' : 'portals';
     G.zone = G.view === 'room' ? 'forest' : G.view;
     G.saveNow();
     if (Save.storageOk === false && !G.noOverwrite) UI.notice('Este navegador no permite guardar al abrir el juego como archivo local. Puedes jugar igual: exporta la partida desde «Partida» para conservarla.');
@@ -83,27 +90,36 @@
   }
 
   // ---------- Vistas ----------
-  G.openRoom = function () {
-    G.view = 'room'; G.state.settings.view = 'room';
+  G.openRoom = function (tab) {
+    if (G.view !== 'room') G.cameFromZone = true;
+    G.view = 'room'; G.roomTab = tab === 'table' ? 'table' : 'portals';
+    G.state.settings.view = 'room'; G.state.settings.roomTab = G.roomTab;
     Scene.setMainVisible(false);
     UI.clearBanners();
-    UI.applyView(); UI.update(true); G.saveNow();
+    UI.applyView(); fitCanvas(); UI.update(true); G.saveNow();
+  };
+  // Lleva a una sección concreta de la Mesa Redonda, con camino de vuelta a la zona
+  G.openTable = function (section) {
+    G.openRoom('table');
+    var sec = section && document.getElementById(section);
+    if (sec && sec.scrollIntoView) sec.scrollIntoView({ block: 'start' });
+    if (sec) { var f = sec.querySelector('button:not([disabled])'); if (f) f.focus({ preventScroll: true }); }
   };
   G.openZone = function (z) {
-    if (!S.isOpen(G.state, z)) { UI.log(C.zones[z].name + ' sigue sellada: el bosque debe producir ' + A.fmt(S.unlockRule(z)) + '/s de forma automática.'); return; }
+    if (!S.isOpen(G.state, z)) { UI.log(C.zones[z].name + ' sigue sellada: ' + S.unlockText(G.state, z) + '.'); return; }
     var changed = G.zone !== z || G.view === 'room';
-    G.zone = z; G.view = z; G.state.settings.view = z;
+    G.zone = z; G.view = z; G.state.settings.view = z; G.cameFromZone = false;
     Scene.setZone(z); Scene.setMainVisible(true);
     if (G.anomaly && G.anomaly.zone !== z) clearAnomaly();
     if (changed) UI.clearBanners();
     UI.structKey = {};
     UI.applyView();
+    fitCanvas(); // el lienzo pudo ajustarse mientras estaba oculto (arranque en la Sala)
     var zz = G.state.zones[z];
     if (z !== 'forest' && !zz.introSeen) {
       zz.introSeen = true;
       Scene.awaken(z);
-      if (z === 'jungle') { UI.banner('<strong>La herborista despierta</strong><br>Marca raíces a mano hasta conseguir su grimorio', 5000); UI.log('En la jungla, una herborista de poda corta raíces corrompidas. Su moneda es la <b>savia de la jungla</b>.'); }
-      else { UI.banner('<strong>La maga despierta</strong><br>Traza sellos a mano hasta conseguir su propio báculo', 5000); UI.log('En la cripta, una maga despierta. Su maná es <b>maná de la cripta</b>: un saldo distinto al del bosque.'); }
+      var t = INTRO[z]; UI.banner('<strong>' + t[0] + '</strong><br>' + t[1], 5000); UI.log(t[2]);
     }
     UI.update(true); G.saveNow();
   };
@@ -131,9 +147,9 @@
     if (!r) return null;
     var Z = C.zones[zone], name = S.itemName(zone, id, r.lvlBefore);
     var msg = '<b>' + name + '</b> +' + r.n + ' (Nv ' + r.lvlBefore + '→' + r.lvlAfter + ') · pagaste ' + A.fmt(r.cost) + ' de ' + Z.currency + '. ' +
-      Z.short + ': ' + A.fmtRate(r.before) + ' → <b>' + A.fmtRate(r.after) + '</b>';
+      Z.short + ': ' + A.fmtRate(r.before) + ' → <b>' + A.fmtRate(r.after) + '</b>' + (r.before > 0 ? ' (+' + A.fmtPct((r.after - r.before) / r.before) + ')' : '');
     var pb = r.preview.before, pa = r.preview.after;
-    [['crypt.pulse', 'pulso de la cripta'], ['jungle.bloom', 'floración'], ['forest.orbit', 'órbita']].forEach(function (k) {
+    [['crypt.pulse', 'pulso de la cripta'], ['jungle.bloom', 'floración'], ['forest.orbit', 'órbita'], ['castle.thaw', 'deshielo']].forEach(function (k) {
       if (k[0].split('.')[0] === zone) return;
       var d = (pa.events[k[0]] || 0) - (pb.events[k[0]] || 0);
       if (d > 1e-9) msg += ' · ' + k[1] + ' +' + A.fmt(d);
@@ -161,23 +177,33 @@
     var r = S.buyOrder(G.state, id); if (!r) return null;
     var d = C.order[id], msg = '<b>' + d.name + ' Nv ' + r.lvl + '</b> · pagaste ' + A.fmt(r.cost) + ' de ' + C.zones[d.pays].currency + '. ';
     if (d.to) {
-      var ev = { confluence: 'crypt.pulse', pollen: 'jungle.bloom', rootstar: 'forest.orbit' }[id];
+      var ev = { confluence: 'crypt.pulse', pollen: 'jungle.bloom', rootstar: 'forest.orbit', requiem: 'castle.thaw' }[id];
       msg += 'Cada evento recibe ' + d.seconds[r.lvl] + ' s de ' + C.zones[d.from].short.toLowerCase() + ': ' + A.fmt(r.before.events[ev] || 0) + ' → <b>' + A.fmt(r.after.events[ev] || 0) + '</b>; ' + C.zones[d.to].short + ' ' + A.fmtRate(r.before.prod[d.to]) + ' → <b>' + A.fmtRate(r.after.prod[d.to]) + '</b>. La zona de origen conserva su maná.';
-      UI.banner('<strong>' + d.name + '</strong><br>' + C.zones[d.from].short + ' → ' + C.zones[d.to].short, 3500);
     } else msg += 'Bosque ' + A.fmtRate(r.before.prod.forest) + ' → <b>' + A.fmtRate(r.after.prod.forest) + '</b>; cripta ' + A.fmtRate(r.before.prod.crypt) + ' → <b>' + A.fmtRate(r.after.prod.crypt) + '</b>.';
     UI.log(msg); G.saveNow(); UI.update(true);
     return r;
   };
 
+  // Refundar: el estado nuevo se calcula, se aplica y se GUARDA antes de la animación.
+  // Omitirla, hacer doble clic o recargar a mitad no puede volver a conceder Ecos.
   G.prestige = function () {
-    var r = S.prestige(G.state, G.now()); if (!r) return null;
+    if (G.refounding) return null;
+    var old = G.state, r = S.prestige(old, G.now()); if (!r) return null;
+    G.refounding = true;
     UI.clearBanners();
     G.state = r.state;
-    G.zone = 'forest'; G.view = 'forest'; Scene.setZone('forest'); Scene.setMainVisible(true);
+    G.zone = 'forest'; G.view = 'room'; G.roomTab = 'table'; G.state.settings.view = 'room'; G.state.settings.roomTab = 'table';
     clearAnomaly();
-    G.saveNow(); UI.structKey = {}; UI.applyView(); UI.showPanel('prestige');
-    UI.log('<b>La orden renace.</b> Ganaste ' + r.gained + ' Ecos. Elige un talento permanente.');
-    UI.banner('<strong>La orden renace</strong><br>+' + r.gained + ' Ecos · elige un talento', 5000);
+    G.saveNow();
+    UI.log('<b>La Orden renace.</b> Ganaste ' + r.gained + ' Ecos' + (r.feats ? ' (' + r.feats + ' por hazañas)' : '') + '. Elige un talento permanente.');
+    G.afterRefound = function () {
+      G.refounding = false;
+      Scene.setZone('forest'); Scene.setMainVisible(false);
+      UI.structKey = {}; UI.applyView(); UI.update(true);
+      G.openTable('mesa-talentos');
+      UI.banner('<strong>La Orden renace</strong><br>+' + r.gained + ' Ecos · elige un talento', 5000);
+    };
+    UI.playRefound(old, r);
     return r;
   };
   G.buyTalent = function (id) {
@@ -194,7 +220,8 @@
     s.lastTick = G.now();
     if (s.flags) delete s.flags.legacyOffline; // importar nunca acredita tiempo offline
     G.state = s; G.noOverwrite = false; UI.notice(null);
-    G.zone = 'forest'; G.view = s.settings.view === 'room' ? 'room' : 'forest'; Scene.setZone('forest');
+    G.zone = 'forest'; G.view = s.settings.view === 'room' ? 'room' : 'forest'; G.roomTab = s.settings.roomTab || 'portals';
+    Scene.setZone('forest'); Scene.setMainVisible(G.view !== 'room');
     applySettings(); G.saveNow(); UI.structKey = {}; UI.applyView(); UI.update(true);
     UI.log('Partida importada.');
   };
@@ -202,7 +229,7 @@
     Save.clear(); UI.clearBanners();
     G.noOverwrite = false; UI.notice(null);
     G.state = S.newState(null, G.now());
-    G.zone = 'forest'; G.view = 'forest'; Scene.setZone('forest'); Scene.setMainVisible(true);
+    G.zone = 'forest'; G.view = 'forest'; G.roomTab = 'portals'; Scene.setZone('forest'); Scene.setMainVisible(true);
     clearAnomaly();
     applySettings(); G.saveNow(); UI.structKey = {}; UI.applyView(); UI.showPanel('items');
     UI.log('Partida nueva desde cero.');
@@ -215,7 +242,7 @@
     if (G.anomaly && now > G.anomaly.expires) { clearAnomaly(); scheduleAnomaly(now); }
     if (!G.anomaly && G.view !== 'room' && G.state.zones.forest.items.staff > 0 && now >= G.nextAnomalyAt && (ignoreHidden || !document.hidden)) {
       var z = G.zone;
-      G.anomaly = { zone: z, x: z === 'crypt' ? 200 + Math.random() * 40 : 90 + Math.random() * 60, y: z === 'crypt' ? 50 + Math.random() * 30 : 25 + Math.random() * 40, expires: now + C.anomaly.lifetime * 1000 };
+      G.anomaly = { zone: z, x: 90 + Math.random() * 40, y: 20 + Math.random() * 30, expires: now + C.anomaly.lifetime * 1000 };
       Scene.setAnomaly(G.anomaly);
       document.getElementById('anomaly-btn').hidden = false;
     }
@@ -234,6 +261,7 @@
 
   // ---------- Teclado ----------
   function onKey(e) {
+    if (!document.getElementById('refound').hidden) { if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') { e.preventDefault(); UI.endRefound(); } return; }
     if (UI.modalOpen()) return;
     var tag = (e.target.tagName || '').toLowerCase();
     if (tag === 'textarea' || tag === 'input') return;
@@ -245,19 +273,24 @@
     } else if (/^[1-8]$/.test(k)) { if (G.view !== 'room') G.buyIndex(+k); }
     else if (k === 'c' || k === 'C') G.cycleAmount();
     else if (k === 'z' || k === 'Z') G.nextZone();
-    else if (k === 's' || k === 'S') G.openRoom();
+    else if (k === 's' || k === 'S') G.openRoom('portals');
+    else if (k === 'm' || k === 'M') G.openRoom('table');
     else if (k === 'a' || k === 'A') G.dispelAnomaly();
   }
 
+  // Escala entera del lienzo principal según el ancho Y el alto disponibles
   function fitCanvas() {
     var wrap = document.getElementById('scene-wrap'), cv = document.getElementById('scene');
-    var w = wrap.clientWidth, s = Math.floor(w / Scene.W);
+    var w = wrap.clientWidth, topbar = document.querySelector('.topbar').offsetHeight;
+    var hAvail = root.innerHeight - topbar - 190;
+    var s = Math.min(Math.floor(w / Scene.W), Math.max(2, Math.floor(hAvail / Scene.H)));
     if (s >= 2) { cv.style.width = (Scene.W * s) + 'px'; cv.style.height = (Scene.H * s) + 'px'; }
     else { cv.style.width = '100%'; cv.style.height = 'auto'; }
     var ov = document.getElementById('overlay');
     ov.style.left = cv.offsetLeft + 'px'; ov.style.width = cv.offsetWidth + 'px'; ov.style.right = 'auto';
-    UI.fitPortals();
+    UI.fitPortals(); UI.fitTable();
   }
+  G.fitCanvas = fitCanvas;
   function applySettings() {
     var pref = G.state.settings.reducedMotion;
     if (pref === null) pref = !!(root.matchMedia && root.matchMedia('(prefers-reduced-motion: reduce)').matches);
@@ -273,7 +306,7 @@
     Scene.setZone(G.zone); Scene.setMainVisible(G.view !== 'room');
     UI.applyView();
     fitCanvas();
-    root.addEventListener('resize', fitCanvas);
+    root.addEventListener('resize', function () { fitCanvas(); UI.structKey.room = ''; });
     document.addEventListener('keydown', onKey);
     document.getElementById('scene').addEventListener('click', function (e) {
       var p = Scene.toScene(e.clientX, e.clientY);
@@ -283,7 +316,7 @@
     scheduleAnomaly(G.now());
     UI.update(true);
     if (rep && rep.rawSeconds >= C.offlineReportMinSeconds) UI.offlineReport(rep);
-    if (G.state.zones.forest.manual === 0 && G.state.prestige.resets === 0 && G.state.zones.forest.items.staff === 0) UI.log('Un aprendiz de túnica gastada se detiene ante un cristal en el Bosque del Velo. Lanza Chispas con la mano libre (Espacio o clic en la escena).');
+    if (G.state.zones.forest.manual === 0 && G.state.prestige.resets === 0 && G.state.zones.forest.items.staff === 0) UI.log('Un aprendiz de túnica gastada se detiene ante un cristal en el Bosque del Velo. Tras él aguarda el Ciervo Hueco. Lanza Chispas con la mano libre (Espacio o clic en la escena).');
     else UI.log('Partida cargada.');
 
     var uiAcc = 0, saveAcc = 0, last = Date.now();
@@ -293,13 +326,13 @@
       var wall = Date.now(), dtm = Math.max(0, Math.min(1000, wall - last)); last = wall;
       uiAcc += dtm; saveAcc += dtm;
       updateAnomaly(G.now());
-      if (G.view === 'room') Scene.renderPortals(G.state, wall); else Scene.render(G.state, wall);
+      if (G.view === 'room') { if (G.roomTab === 'table') Scene.drawTable(document.getElementById('table-cv'), G.state, wall); else Scene.renderPortals(G.state, wall); }
+      else Scene.render(G.state, wall);
       if (uiAcc > 200) { uiAcc = 0; UI.update(); }
       if (saveAcc > C.autosaveSeconds * 1000) { saveAcc = 0; G.saveNow(); }
       requestAnimationFrame(frame);
     }
     requestAnimationFrame(frame);
-    // Con la pestaña oculta requestAnimationFrame se pausa: la economía sigue por tiempo transcurrido.
     setInterval(function () { if (document.hidden) G.tick(); }, 1000);
     setInterval(function () { if (document.hidden) G.saveNow(); }, C.autosaveSeconds * 1000);
     document.addEventListener('visibilitychange', function () { G.tick(); G.saveNow(); });
@@ -308,7 +341,7 @@
 
     if (AUTOTEST) {
       var s = document.createElement('script');
-      s.src = /escena=|tira=/.test(location.hash) ? 'tests/scenarios.js' : 'tests/autotest.js';
+      s.src = /escena=|tira=|jefes|insignias/.test(location.hash) ? 'tests/scenarios.js' : 'tests/autotest.js';
       document.body.appendChild(s);
     }
   }

@@ -65,6 +65,24 @@
       o.flags = { migratedFrom: 1, legacyOffline: true };
       o.version = 2;
       return o;
+    },
+    // v0.2 → v0.3: castillo y cavernas (sellados, sin ingresos retroactivos), talentos avanzados,
+    // registros de dominio deducidos de datos fiables del guardado y quinta mejora de la orden.
+    2: function (d) {
+      var o = JSON.parse(JSON.stringify(d));
+      ['castle', 'caverns'].forEach(function (z) { if (!o.zones[z]) o.zones[z] = S.newZone(z); });
+      o.order = o.order || {};
+      if (o.order.requiem === undefined) o.order.requiem = 0;
+      o.prestige = o.prestige || {}; o.prestige.talents = o.prestige.talents || {};
+      ['comet', 'forge', 'pact', 'relics'].forEach(function (k) { if (o.prestige.talents[k] === undefined) o.prestige.talents[k] = 0; });
+      var spell = (o.zones.forest && o.zones.forest.items && o.zones.forest.items.spell) || 0;
+      // Solo se reconoce lo que el guardado demuestra: el nivel actual de la Lluvia y las refundaciones.
+      o.records = { spellMax: spell, thawsMax: 0, allOrders: 0, cavernsSeen: 0 };
+      o.reserve = {};
+      o.settings = o.settings || {}; o.settings.roomTab = 'portals';
+      o.flags = Object.assign({}, o.flags || {}, { migratedFrom: o.flags && o.flags.migratedFrom ? o.flags.migratedFrom : 2, legacyOffline: true, legacyCycle: true });
+      o.version = 3;
+      return o;
     }
   };
 
@@ -143,6 +161,8 @@
         });
       }
       st.mastery.sparks = num(d.mastery && d.mastery.sparks, 'mastery.sparks', errs, { def: 0 });
+      if (d.records && typeof d.records === 'object') Object.keys(st.records).forEach(function (k) { st.records[k] = num(d.records[k], 'records.' + k, errs, { def: 0 }); });
+      if (d.reserve && typeof d.reserve === 'object') st.reserve = numMap(d.reserve, 'reserve', errs);
       if (d.run) {
         st.run.playTime = num(d.run.playTime, 'run.playTime', errs, { def: 0 });
         st.run.number = num(d.run.number, 'run.number', errs, { int: true, def: 1 }) || 1;
@@ -151,6 +171,7 @@
         st.settings.reducedMotion = typeof d.settings.reducedMotion === 'boolean' ? d.settings.reducedMotion : null;
         st.settings.buyAmount = ['1', '10', 'max'].indexOf(d.settings.buyAmount) >= 0 ? d.settings.buyAmount : '1';
         st.settings.view = (d.settings.view === 'room' || ZONES.indexOf(d.settings.view) >= 0) ? d.settings.view : 'forest';
+        st.settings.roomTab = d.settings.roomTab === 'table' ? 'table' : 'portals';
       }
       if (d.last && typeof d.last === 'object') st.last = d.last;
       st.flags = (d.flags && typeof d.flags === 'object') ? d.flags : {};
@@ -158,7 +179,7 @@
       st.lastTick = num(d.lastTick, 'lastTick', errs);
     } catch (e) { errs.push(e.message); }
     if (errs.length) return { ok: false, errors: errs };
-    if (mig.from < C.saveVersion) S.checkUnlock(st); // habilita la jungla si la partida ya cumple su condición
+    if (mig.from < C.saveVersion) { S.checkUnlock(st); S.updateRecords(st); } // habilita zonas si la partida ya cumple su condición
     return { ok: true, state: st, migratedFrom: mig.from < C.saveVersion ? mig.from : null };
   };
 

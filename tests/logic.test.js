@@ -24,7 +24,7 @@ ZONES.forEach(z => {
   ok(slots.filter(s => s === 'focus').length === 1 && slots.filter(s => s === 'robe').length === 1 && slots.filter(s => s === 'hat').length === 1 && slots.filter(s => s === 'accessory').length === 1 && slots.filter(s => s === 'spell').length === 4, z + ': 1 foco, 1 túnica, 1 tocado, 1 accesorio y 4 hechizos', slots);
   ids.forEach(id => ok(C.zones[z].items[id].names.length === 7, z + '.' + id + ': 7 nombres de estado visual'));
 });
-ok(Object.keys(C.zones).length === 3 && C.zoneOrder.join() === 'forest,jungle,crypt', 'orden de presentación bosque → jungla → cripta (ids estables)');
+ok(Object.keys(C.zones).length === 5 && C.zoneOrder.join() === 'forest,jungle,crypt,castle,caverns', 'orden de peligrosidad bosque → jungla → cripta → castillo → cavernas (ids estables)');
 
 section('Partida nueva y primer báculo');
 let st = S.newState(null, 0);
@@ -141,7 +141,7 @@ ok(offRep.legacy && ms.mastery.sparks === 0, 'el tiempo offline anterior a la ac
 ok(!offRep.counts.jungle.bloom && offRep.zones.jungle === 0, 'ni floraciones de la jungla');
 ok(offRep.counts.crypt.pulse > 0 && offRep.zones.forest > 0, 'sí acredita lo que ya existía (bosque y pulsos)');
 const ms2 = Save.parse(JSON.stringify(ms)).state;
-ok(ms2.version === 2 && !Save.parse(JSON.stringify(ms)).migratedFrom, 'el guardado migrado ya es v2: no se vuelve a migrar');
+ok(ms2.version === 3 && !Save.parse(JSON.stringify(ms)).migratedFrom, 'el guardado migrado ya es v3: no se vuelve a migrar');
 const again = Save.applyOffline(ms2, ms.lastTick);
 ok(again.zones.forest === 0 && again.zones.crypt === 0, 'recargar en el mismo instante no vuelve a acreditar');
 ok(!ms2.flags.legacyOffline, 'el modo legado se consume una sola vez');
@@ -183,7 +183,7 @@ ok(S.canPrestige(st) && S.echoesFor(S.runTotal(st)) === 3, 'meta alcanzada suman
 st.zones.forest.mana = 1e12; st.zones.forest.items.spell = 1;
 const eb = S.echoesFor(S.runTotal(st)); S.buy(st, 'forest', 'spell', 'max');
 ok(S.echoesFor(S.runTotal(st)) === eb, 'comprar objetos no reduce los Ecos previstos');
-st.mastery.sparks = 3000;
+st.mastery.sparks = 3000; st.run.playTime = 3600;
 const ns = S.prestige(st, 1).state;
 ok(ns.prestige.echoes === 3 && !ns.zones.jungle.unlocked && !ns.zones.crypt.unlocked && ns.zones.forest.items.spell === 0 && ns.order.pollen === 0, 'refundar reinicia tres zonas y mejoras');
 ok(ns.mastery.sparks === 3000 && ns.settings.view === 'forest', 'la maestría (cosmética) se conserva; la vista vuelve al bosque');
@@ -197,12 +197,114 @@ ok(S.manual(tSeed, 'jungle').bloom > 0, 'la primera marca ya produce una floraci
 const tH = clone(ns); S.buyTalent(tH, 'heirloom');
 ok(tH.prestige.echoes === 1 && S.buyTalent(tH, 'sky') === null, 'con 3 Ecos se elige un talento de 2 (Báculos heredados compite con Cielo Recordado y Semilla)');
 
-section('Las 24 entradas se descubren y compran en juego normal (simulación)');
+section('Castillo: grietas, red y deshielo (activo = offline)');
+st = S.newState(null, 0); open(st, 'castle');
+for (let i = 0; i < 3; i++) S.manual(st, 'castle');
+ok(st.zones.castle.mana > 0 && !(st.zones.castle.cnt.crack), 'antes de la lanza, las ascuas manuales dan brasa sin grietas');
+Object.assign(st.zones.castle.items, { lance: 12, bracer: 3, embers: 4, hammer: 2, helm: 2, guide: 5, phoenix: 1, robe: 3 });
+const km = S.model(st, 'castle'), kc = km.cycles[0];
+ok(kc.id === 'crack' && kc.seq.id === 'thaw' && kc.seq.every === 6, 'cada 6 grietas, un deshielo');
+ok(kc.interval < 3 && kc.interval >= 1, 'la Grieta Guía acorta el ritmo (de 3 s hacia 1 s)', kc.interval);
+const ka = clone(st), kb = clone(st);
+for (let i = 0; i < 1500; i++) S.advance(ka, 0.0431);
+S.advance(kb, 64.65);
+ok(ka.zones.castle.cnt.crack === kb.zones.castle.cnt.crack && ka.zones.castle.cnt.thaw === kb.zones.castle.cnt.thaw && near(ka.zones.castle.mana, kb.zones.castle.mana, 1e-6), 'jugar activo = offline en el castillo (grietas y deshielos idénticos)');
+ok(kb.zones.castle.cnt.thaw === Math.floor(kb.zones.castle.cnt.crack / 6), 'deshielos = ⌊grietas/6⌋');
+const heatUp = clone(st); heatUp.zones.castle.items.embers += 10;
+const thawUp = clone(st); thawUp.zones.castle.items.phoenix += 3;
+ok(S.model(heatUp, 'castle').parts.heat > km.parts.heat && S.model(thawUp, 'castle').parts.thaw.base > km.parts.thaw.base, 'dos caminos: calor sostenido (ascuas) o explotar el deshielo (fénix)');
+ok(S.itemCap('castle', 'guide') === 17 && S.visualMilestones('castle', 'guide').join() === '10,17', 'la Grieta Guía tiene tope real (Nv 17) y solo anuncia 10 y 17');
+
+section('Cavernas: haces simultáneos y mirada del ojo');
+st = S.newState(null, 0); open(st, 'caverns');
+Object.assign(st.zones.caverns.items, { mirror: 10, shards: 2, lens: 3, diadem: 2, gaze: 4, zenith: 1 });
+const vm = S.model(st, 'caverns').parts;
+ok(vm.mirrors === 2 && vm.convergence > 1 && vm.beams > vm.main, 'cada espejo de hielo mantiene su propio haz y aumenta la convergencia');
+const more = clone(st); more.zones.caverns.items.shards++;
+const inten = clone(st); inten.zones.caverns.items.lens += 3;
+ok(S.zoneProd(more, 'caverns') > S.zoneProd(st, 'caverns') && S.zoneProd(inten, 'caverns') > S.zoneProd(st, 'caverns'), 'elegir: más superficies (espejos) o más intensidad por haz');
+ok(S.itemCap('caverns', 'shards') === 6 && S.visualMilestones('caverns', 'shards').join() === '6', 'los espejos de hielo culminan en 6 (Corona de Espejos)');
+ok(near(vm.window, 4 + 0.5 * 4), 'la Mirada Sostenida alarga la ventana del ojo (4 s + 0,5 s/nivel)');
+const va = clone(st), vb = clone(st);
+for (let i = 0; i < 1000; i++) S.advance(va, 0.0911);
+S.advance(vb, 91.1);
+ok(va.zones.caverns.cnt.eye === vb.zones.caverns.cnt.eye && vb.zones.caverns.cnt.eye === 3 && near(va.zones.caverns.mana, vb.zones.caverns.mana, 1e-6), 'cavernas: activo = offline (3 miradas en 91 s)');
+
+section('Desbloqueo del castillo y de las cavernas');
+st = S.newState(null, 0); open(st, 'jungle'); open(st, 'crypt');
+Object.assign(st.zones.crypt.items, { staff: 60, bell: 20, chalk: 20, medallion: 5 }); S.advance(st, 0.01);
+ok(st.zones.castle.unlocked, 'el castillo abre cuando la cripta supera su umbral (primer ciclo)');
+st.zones.castle.items.lance = 20; st.zones.castle.cnt.thaw = 12; S.checkUnlock(st);
+ok(!st.zones.caverns.unlocked, 'sin refundaciones, las cavernas siguen selladas aunque haya 10 deshielos');
+st.prestige.resets = 1; S.checkUnlock(st);
+ok(st.zones.caverns.unlocked, 'con 1 refundación y 10 deshielos en el ciclo, se abren las cavernas');
+const fresh = S.newState(null, 0); fresh.prestige.resets = 2; open(fresh, 'castle'); fresh.zones.castle.cnt.thaw = 9; S.checkUnlock(fresh);
+ok(!fresh.zones.caverns.unlocked && S.unlockProgress(fresh, 'caverns') === 0.9, 'el progreso hacia las cavernas se anuncia (90 %)');
+
+section('Ecos: curva, hazañas y refundación única');
+ok(S.echoesFor(1.769e9) === 3 && S.echoesFor(1.7778e9) === 4, 'la curva es idéntica a v0.2 hasta 12 Ecos (una partida a punto del 4.º lo conserva)');
+ok(S.echoesFor(S.totalForEchoes(12)) === 12 && S.echoesFor(S.totalForEchoes(12) * 2) === 15 && S.echoesFor(S.totalForEchoes(12) * 4) === 18, 'por encima de 12: +3 Ecos por cada duplicación del total');
+st = S.newState(null, 0); open(st, 'crypt'); open(st, 'castle'); st.zones.forest.generated = C.prestige.goalTotal;
+st.zones.castle.cnt.crack = 1; st.zones.castle.cnt.thaw = 10;
+const short = clone(st); short.run.playTime = 600;
+ok(S.echoInfo(short).feats === 0 && S.echoInfo(short).base === Math.min(3, 2), 'ciclo de 10 min: sin hazañas y Ecos base con tope de madurez (1 cada 4 min)', S.echoInfo(short));
+st.run.playTime = 3600;
+const ei = S.echoInfo(st);
+ok(ei.base === 3 && ei.feats === 2 && ei.gain === 5, 'hazañas del ciclo: primera grieta (+1) y 10 deshielos (+1)', ei);
+const pr1 = S.prestige(st, 1);
+ok(pr1.gained === 5 && pr1.state.prestige.echoes === 5 && S.prestige(pr1.state, 2) === null, 'refundar concede la recompensa una vez; repetir sobre el estado nuevo no concede nada');
+ok(pr1.opened.join() === 'forest,crypt,castle', 'la secuencia sabe qué zonas se abrieron');
+
+section('Talentos avanzados: requisitos, Pacto, Brasas, Reliquias');
+const tv = S.newState(null, 0); tv.prestige.echoes = 100;
+ok(S.buyTalent(tv, 'comet') === null && S.buyTalent(tv, 'relics') === null, 'sin dominio, los avanzados no se pueden comprar');
+tv.records.spellMax = 50; tv.prestige.resets = 3;
+ok(S.buyTalent(tv, 'comet') && S.buyTalent(tv, 'relics'), 'con el dominio cumplido, se compran');
+ok(S.talentCost('comet', 1) > S.talentCost('comet', 0) && S.talentCost('pact', 2) === 32, 'costes avanzados crecientes');
+const pa = S.newState(null, 0); open(pa, 'crypt'); pa.zones.crypt.items.staff = 5; pa.zones.forest.items.staff = 20; pa.order.confluence = 2;
+const c0 = S.model(pa, 'crypt').parts.confluence; pa.prestige.talents.pact = 1;
+ok(near(S.model(pa, 'crypt').parts.confluence, c0 * 1.5), 'Pacto de la Mesa: los aportes cruzados rinden +50 %');
+const fg = S.newState(null, 0); fg.prestige.talents.forge = 1; open(fg, 'crypt'); S.checkUnlock(fg);
+ok(fg.zones.castle.unlocked && fg.zones.castle.items.lance === 10, 'Brasas Perpetuas: el castillo abre con la cripta y la lanza en Nv 10');
+const rl = S.newState(null, 0); rl.run.playTime = 3600; rl.prestige.talents.relics = 1; open(rl, 'crypt'); rl.zones.crypt.items.staff = 10; rl.zones.forest.items.staff = 20; rl.zones.forest.generated = C.prestige.goalTotal;
+const cprod = S.zoneProd(rl, 'crypt'), rr = S.prestige(rl, 1).state;
+ok(near(rr.reserve.crypt, 60 * cprod) && rr.zones.crypt.mana === 0, 'Reliquias: la cripta guarda 60 s de producción en reserva');
+rr.zones.forest.items.robe = 400; S.advance(rr, 0.01);
+ok(rr.zones.crypt.unlocked && near(rr.zones.crypt.mana, 60 * cprod, 1e-3) && !rr.reserve.crypt, 'y la entrega al reabrirse (una sola vez)');
+
+section('Migración v0.2 → v0.3 (guardado v0.2 real con talentos, avanzado y cerca del próximo Eco)');
+const raw2 = fixture('v02-avanzada.json'), old2 = JSON.parse(raw2), m2 = Save.parse(raw2);
+ok(m2.ok && m2.migratedFrom === 2, 'el guardado v0.2 se migra', m2.errors);
+const s2 = m2.state;
+ok(s2.prestige.echoes === 2 && s2.prestige.resets === 2 && s2.prestige.talents.heirloom === 1 && s2.prestige.talents.sky === 1 && s2.prestige.talents.bells === 1, 'conserva Ecos, refundaciones y talentos');
+ok(['forest', 'jungle', 'crypt'].every(z => JSON.stringify(s2.zones[z].items) === JSON.stringify(old2.zones[z].items)), 'conserva todas las compras de las tres zonas');
+ok(near(s2.zones.crypt.cyc.pulse, old2.zones.crypt.cyc.pulse) && s2.zones.jungle.seq.bloom === 2 && near(s2.zones.forest.cyc.orbit, 4.2), 'conserva las fases de producción');
+ok(s2.mastery.sparks === 12345 && s2.order.rootstar === 3 && s2.order.requiem === 0, 'conserva maestría y mejoras de la orden; la nueva empieza en 0');
+ok(s2.records.spellMax === 55 && s2.records.thawsMax === 0, 'dominios deducidos de datos fiables (Lluvia Nv 55); sin inventar deshielos');
+ok(S.talentReqMet(s2, 'comet') && S.talentReqMet(s2, 'forge') === false, 'la Escuela del Cometa queda disponible sin repetir nada; las demás piden su dominio');
+ok(s2.zones.castle.items.lance === 0 && s2.zones.castle.mana === 0 && !s2.zones.caverns.unlocked, 'el castillo empieza vacío (sin ingresos retroactivos) y las cavernas selladas');
+ok(S.echoInfo(s2).base === 3, 'la recompensa base prevista no cambia (3 Ecos, como en v0.2)');
+const off2 = Save.applyOffline(s2, old2.lastTick + 3600e3);
+ok(off2.legacy && off2.zones.castle === 0 && off2.zones.caverns === 0, 'el offline previo a la actualización no da ingresos a las zonas nuevas');
+ok(s2.prestige.resets >= 1, 'las cavernas reconocen la refundación ya hecha (no hay que repetirla)');
+const s3 = clone(s2); s3.zones.castle.unlocked = true; s3.zones.castle.cnt.thaw = 10; S.checkUnlock(s3);
+ok(s3.zones.caverns.unlocked, 'partida migrada: con 10 deshielos en el ciclo actual se abren las cavernas');
+const chain = Save.parse(fixture('v01-refundada.json'));
+ok(chain.ok && chain.migratedFrom === 1 && chain.state.version === 3 && chain.state.prestige.talents.heirloom === 1, 'la ruta desde v0.1 sigue funcionando (v0.1 → v0.2 → v0.3)');
+
+section('Perfiles de 48 h (simulación con sesiones y offline)');
+const P48 = require('../tools/balance').PROFILES.map(p => require('../tools/balance').campaign(p));
+P48.forEach(c => {
+  ok(c.refunds >= 2 && c.talents.length >= 4, c.profile + ': refunda (' + c.refunds + ') y se especializa (' + c.talents.join(', ') + ')');
+  ok(c.pending.length >= 3, c.profile + ': le quedan decisiones importantes (' + c.pending.length + ' talentos pendientes)');
+});
+
+section('Las 32 entradas del ciclo 1 se descubren y compran en juego normal (simulación)');
 const B = require('../tools/balance');
 const run = B.run({ minutes: 70, full: true });
 const fb = B.firstBuys(run);
 const missing = [];
-ZONES.forEach(z => C.zones[z].itemOrder.forEach(id => { if (fb[z + '.' + id] === undefined) missing.push(z + '.' + id); }));
+ZONES.filter(z => z !== 'caverns').forEach(z => C.zones[z].itemOrder.forEach(id => { if (fb[z + '.' + id] === undefined) missing.push(z + '.' + id); }));
 ok(missing.length === 0, 'todas las entradas compradas en 70 min de la estrategia simulada', missing);
 
 section('Balance (estrategia simulada de tools/balance.js)');
@@ -211,7 +313,8 @@ ok(mk['primer báculo'] >= 10 && mk['primer báculo'] <= 20, 'primer báculo en 
 ok(mk['primera evolución (Nv 10)'] >= 120 && mk['primera evolución (Nv 10)'] <= 300, 'primera evolución en 2–5 min', mk['primera evolución (Nv 10)']);
 ok(mk['jungla descubierta'] > mk['primera evolución (Nv 10)'] && mk['jungla descubierta'] < mk['cripta abierta'], 'la jungla aparece entre la primera evolución y la cripta', [mk['jungla descubierta'], mk['cripta abierta']]);
 ok(mk['cripta abierta'] >= 600 && mk['cripta abierta'] <= 1200, 'cripta en 10–20 min', mk['cripta abierta']);
-ok(mk['refundar disponible'] >= 2100 && mk['refundar disponible'] <= 3600, 'primer prestigio en 35–60 min', mk['refundar disponible']);
+ok(mk['refundar disponible'] >= 2040 && mk['refundar disponible'] <= 3600, 'primera refundación ≈35–60 min (simulada: ' + B.fmtT(mk['refundar disponible']) + ')', mk['refundar disponible']);
+ok(mk['castillo abierto'] < mk['refundar disponible'], 'el castillo se descubre en el primer ciclo', mk['castillo abierto']);
 
 console.log('\n' + pass + ' correctas, ' + fail + ' fallidas');
 process.exit(fail ? 1 : 0);

@@ -10,7 +10,7 @@ module.exports = function load(extraFiles) {
   vm.createContext(ctx);
   const files = ['js/config.js', 'js/sim.js', 'js/save.js'].concat(extraFiles || []);
   for (const f of files) {
-    const p = path.join(__dirname, '..', f);
+    const p = path.join(process.env.ARCANE_ROOT || path.join(__dirname, '..'), f); // ARCANE_ROOT: medir otra versión (p. ej. la v0.2)
     if (fs.existsSync(p)) vm.runInContext(fs.readFileSync(p, 'utf8'), ctx, { filename: f });
   }
   return ctx.Arcane;

@@ -4,7 +4,249 @@ Formato: la sección **En curso** se actualiza mientras se trabaja. El comando �
 
 ## En curso
 
-_(Sin cambios desde v0.2.0.)_
+_(Sin cambios desde v0.3.0.)_
+
+## v0.3.0 — 2026-11-23 — Cerrada
+
+Punto de partida: v0.2.0.
+
+### Informe de cierre
+
+````markdown
+# La Orden del Umbral — v0.3.0 — 2026-11-23
+Estado: Cerrada
+
+## Qué se puede jugar ahora
+Incremental de navegador en español: cinco magos en cinco zonas (bosque → jungla → cripta → castillo → cavernas). Cada mago paga sus objetos con el maná de su propia zona. Todas las zonas producen en paralelo, también offline (hasta 8 h). Cada mago se enfrenta a un jefe que reacciona a sus hechizos, pero no muere durante el ciclo. La Sala de la Orden tiene dos pestañas: Portales, para mirar a los magos, y Mesa Redonda, para mejoras, talentos y hazañas. Al refundar, una secuencia muestra caer a los cinco jefes y se ganan Ecos para talentos permanentes. La primera refundación llega en unos 35 min de juego simulado.
+
+## Cambios y arreglos
+- **Jefes en las cinco zonas.** Tienen vida infinita durante el ciclo: no hay barra de vida ni reaparición. Cada uno tiene pose de reposo, reacción al impacto y una derrota que solo ocurre en la refundación.
+  - Bosque: el Ciervo Hueco, con pecho luminoso y astas.
+  - Jungla: la Reina Injerto, una flor carnívora cuyas bocas se abren al florecer.
+  - Cripta: el Rey sin Réquiem, que tiembla con cada toque.
+  - Castillo: la Regente de Escarcha, fundida con su trono.
+  - Cavernas: el Corazón de la Caldera, un coloso de lava con ojo y mano.
+  - El ataque de cada mago apunta al jefe.
+- **Hechizos insignia.** Tienen preparación, trayectoria, impacto y reacción del jefe. Los lanzamientos manuales salen de la mano libre y los automáticos del foco. Respetan el movimiento reducido y no cambian la ganancia.
+- **Sala dividida en Portales (S) y Mesa Redonda (M).**
+  - Los portales avisan con discreción cuando se puede refundar.
+  - La Mesa reúne:
+    - las mejoras de la Orden, con duración, coste, moneda y condición;
+    - los talentos y las hazañas;
+    - el aporte de cada zona;
+    - los Ecos actuales, lo que falta para el siguiente y el talento al alcance.
+  - Las compras usan una sola implementación en toda la interfaz.
+- **Refundación con confirmación y secuencia.**
+  - La confirmación separa lo que se gana, lo que se pierde y lo que se conserva.
+  - Secuencia: portales encendidos, ataque culminante, caída de los jefes y apagado. Se puede omitir con Esc y tiene versión reducida.
+  - La recompensa se guarda antes de la animación. Confirmar, omitir, hacer doble clic o recargar a mitad la otorgan exactamente una vez.
+- **Castillo del Invierno Inmóvil** (zona 4).
+  - Un lancero de brasas agrieta el hielo y cada 10 grietas llega un deshielo.
+  - La decisión es entre calor sostenido y explotar el deshielo.
+  - Se descubre en el primer ciclo, cuando la cripta produce 15 K/s.
+  - Nueva mejora de la Orden, Réquiem: la cripta acelera el deshielo.
+- **Cavernas del Sol Sepultado** (zona 5).
+  - Un mago glacial con espejo de obsidiana; sus espejos de hielo lanzan rayos simultáneos.
+  - La decisión es entre más superficies y más intensidad.
+  - Se abren tras 1 refundación y 10 deshielos, y se anuncian antes.
+- **Talentos.** A los 5 anteriores se suman 4 avanzados, con requisitos y coste creciente:
+  - Cometa: requiere Lluvia Nv 50.
+  - Forja: requiere 10 deshielos.
+  - Pacto: requiere toda la Orden.
+  - Reliquias: requiere 3 refundaciones. Guarda maná que se entrega al reabrir cada zona.
+- **Hazañas.** Objetivos de maestría que dan Ecos extra. Solo cuentan en ciclos de 20 min o más.
+- **Vistas previas de compra.** Usan el mismo cálculo que la compra real. Por ejemplo, en Nv 47 avisan que ×3 alcanza la evolución del Nv 50 y lo comparan con la alternativa.
+- **Pantalla adaptable.** Los portales y el lienzo usan escala entera según el ancho y el alto disponibles, sin scroll horizontal.
+- **Migración v0.2 → v0.3:**
+  - Antes de migrar se guarda una copia recuperable (`respaldo-v2`), que se puede exportar.
+  - Las zonas nuevas no reciben ingresos retroactivos.
+  - Las refundaciones previas cuentan para abrir las cavernas.
+  - El ciclo migrado no sufre el tope de madurez.
+  - Siguen funcionando la ruta desde v0.1, exportar, importar y «Empezar desde cero».
+- **Arreglo:** el texto decía «1 Ecos». Ahora concuerda en singular y plural.
+
+## Balance y decisiones
+- **Objetivos de diseño:**
+  - primera refundación en 35–60 min con al menos un talento;
+  - castillo en el primer ciclo;
+  - cavernas en el segundo.
+- **Tiempos simulados** (`tools/balance.js`), v0.2 → v0.3:
+
+  | Hito | v0.2 | v0.3 |
+  |---|---|---|
+  | Cripta | 11:40 | 11:20 |
+  | Castillo | — | 20:40 |
+  | Primera refundación | 39:36 | 34:55 (6 Ecos) |
+  | Ciclo 2 con Báculos heredados | 33:16 | 29:21 (cavernas 19:03) |
+
+- **Curva de Ecos:**
+  - Es idéntica a v0.2 hasta 12 Ecos; después suma +3 por cada duplicación del maná.
+  - Tope de madurez: 1 Eco base cada 4 min de ciclo.
+  - Sin estos límites, el perfil activo superaba los 1000 Ecos en 48 h.
+- **Ciclo corto frente a profundo:** 14,3 frente a 17,6 Ecos por hora.
+- **Perfiles simulados de 48 h:**
+
+  | Perfil | Tiempo activo | Refundaciones | Ecos | Pendientes |
+  |---|---|---|---|---|
+  | Breve | 1 h 36 min | 4 | 88 | 5 talentos |
+  | Activo | 5 h 40 min | 17 | 230 | solo niveles repetibles |
+
+- **Decisiones de compra** (cálculo real, v0.2 → v0.3):
+  - Báculo Nv 47 → 50: +10,2 % → +12,5 %.
+  - Con el coste de 1 nivel de Lluvia, llevar el báculo de Nv 31 a Nv 50: +13,1 % → +15,7 %. Prisma 1,3 % → 0,8 %.
+  - Túnica ×10: +0,22 % → +1,35 %. Las túnicas suman ahora +0,5 % del foco por nivel.
+- **Tramos sin compras útiles de ×10:** 12 → 10. Los que quedan son esperas por Polen y Confluencia.
+- **Tiempos observados jugando:** aún no hay.
+
+## Verificación
+- **Prueba de lógica** (Node): 178/178. Cubre:
+  - las 5 zonas: el juego activo da lo mismo que el offline y la recarga a mitad de ciclo continúa;
+  - la curva de Ecos, el tope de madurez y las hazañas;
+  - los talentos avanzados y las Reliquias;
+  - que la refundación se aplique una sola vez;
+  - la migración con partidas reales v0.1 y v0.2.
+- **Prueba en navegador real** (Chrome headless sobre `file://`): 66/66, con recargas reales:
+  - a mitad de la refundación;
+  - durante la migración desde v0.2;
+  - durante la migración desde v0.1.
+- **Capturas revisadas a mano:**
+  - jefes en reposo, impacto, derrota y portal;
+  - fases de los hechizos insignia;
+  - Sala con 5 zonas, Mesa, confirmación y secuencia;
+  - 360 px.
+- **Pantalla adaptable:** 1280×720, 1366×768, 1536×864 y 1920×1080, sin scroll horizontal. El zoom al 125 % se emuló con el tamaño de ventana equivalente.
+- **Simulación económica:** tiempos por hito, Ecos por hora, perfiles de 48 h y tramos de ×10.
+- **Sin comprobar:** fluidez real (las pruebas fuerzan los cuadros), Edge, Firefox, un móvil real y tiempos jugando.
+
+## Qué conviene probar jugando
+1. Con la partida migrada, abre los Portales (S) un minuto. ¿Se reconoce cada jefe y su reacción al golpe?
+2. Abre la Mesa (M). ¿Queda claro cuántos Ecos darías ahora y qué falta para el siguiente?
+3. Juega del castillo hasta las cavernas y refunda. ¿La secuencia se disfruta y omitirla se siente bien? ¿Las cavernas llegan en un buen momento?
+
+## Pendientes conocidos
+- El perfil activo agota casi todos los talentos en 48 h: falta contenido de largo plazo.
+- La primera refundación simulada (34:55) roza el mínimo del objetivo. Hay que confirmarla con tiempos reales.
+- Quedan 10 tramos de espera por compras grandes.
+- Con 5 zonas a la vista, la fluidez en equipos modestos no está medida.
+- No hay sonido.
+````
+
+### Notas de desarrollo de esta versión
+
+#### Novedades
+- **Jefes legibles en las cinco zonas**, con vida infinita durante el ciclo: no hay barra de vida, daño acumulado ni reaparición. Cada uno tiene pose de reposo, reacción al impacto y una derrota reservada a la secuencia de refundación (`js/bosses.js`).
+  - **Ciervo Hueco** (bosque): cuerpo entero, pecho hueco luminoso y astas ramificadas. El cristal ya no lo tapa.
+  - **Reina Injerto** (jungla): flor carnívora con mandíbula, corona de pétalos y raíces unidas a las raíces podadas. Las bocas se abren en cada floración.
+  - **Rey sin Réquiem** (cripta): corpóreo, con corona, manto y armadura. Tiembla con cada toque y sigue visible entre pulsos.
+  - **Regente de Escarcha** (castillo): trono fundido con su armadura; las grietas y el deshielo se ven sobre ella.
+  - **Corazón de la Caldera** (cavernas): coloso de lava con un ojo dominante y una mano que reacciona.
+  - El gesto de ataque de cada mago apunta al jefe o canaliza hacia él.
+- **Hechizos insignia** con preparación, trayectoria, impacto y reacción del jefe. Los lanzamientos manuales salen de la mano libre y los automáticos del foco. Se conservan los hitos visuales y se respeta el movimiento reducido. Las partículas nunca cambian la ganancia.
+- **Sala de la Orden dividida en Portales y Mesa Redonda**, con pestañas y teclado (S = portales, M = Mesa, Esc = omitir).
+  - Los **portales** muestran mago y jefe. Una señal discreta lleva a la Mesa cuando se puede refundar.
+  - La **Mesa** reúne magos despiertos, mejoras de la Orden (duración, coste, moneda y condición), talentos, aportes por zona, hazañas y «Refundar la Orden». Muestra los Ecos de ahora, lo que falta para el siguiente y el talento a tu alcance.
+  - Todas las compras pasan por una sola implementación. La tienda tiene accesos «Orden ↗» y «Refundar ↗».
+  - La confirmación muestra **Ganarás / Perderás / Conservarás**.
+  - **Secuencia de refundación**: los portales se encienden, cada mago lanza su ataque culminante, los jefes caen y los portales se apagan. Se puede omitir y tiene versión reducida. El estado nuevo se calcula y se **guarda antes** de la animación: confirmar, omitir, hacer doble clic o recargar a mitad de la secuencia otorgan la recompensa exactamente una vez.
+- **Castillo del Invierno Inmóvil** (4.ª zona): mago lancero de brasas.
+  - Cada ascua agrieta el hielo y 10 grietas provocan un deshielo.
+  - Decisión del jugador: calor sostenido (Brasas, Guía) frente a explotar el deshielo (Martillo, Fénix).
+  - Se descubre en el primer ciclo: se abre cuando la cripta produce 15 K/s.
+  - Nueva mejora de la Orden **Réquiem**: la cripta acelera el deshielo y se paga con maná de la cripta.
+- **Cavernas del Sol Sepultado** (5.ª zona): mago glacial con espejo de obsidiana.
+  - Los espejos de hielo lanzan rayos simultáneos.
+  - Decisión: más superficies (Esquirlas) frente a más intensidad (Lente, Mirada, Cénit).
+  - Se abren tras ≥ 1 refundación y 10 deshielos del castillo. Se anuncian antes en la Sala y en la Mesa. Las refundaciones de partidas migradas cuentan.
+- Ambas zonas nuevas tienen 8 entradas, producen en paralelo aunque no estén visibles y también offline.
+- **Talentos avanzados** (4 nuevos, con requisito y coste creciente), además de los 5 anteriores:
+  - **Cometa** (6 Ecos, ×1,8, máx. 5; requiere Lluvia Nv 50 en algún ciclo);
+  - **Forja** (10; requiere 10 deshielos en un ciclo);
+  - **Pacto** (8, ×2, máx. 3; requiere todas las mejoras de la Orden);
+  - **Reliquias** (12, ×2, máx. 3; requiere 3 refundaciones; guarda maná que se entrega al reabrir cada zona y no cuenta como maná generado).
+- **Hazañas** (objetivos de maestría): +Ecos por abrir el castillo, 10 deshielos, toda la Orden, abrir las cavernas y 30 miradas. Solo cuentan en ciclos de ≥ 20 min.
+- **Vistas previas** basadas en el cálculo real de la compra. Por ejemplo, en Nv 47 la tienda avisa que ×3 alcanza la evolución del Nv 50 y compara con la alternativa.
+- **Textos:** «Eco/Ecos» concuerdan con el número en la Mesa, la confirmación, la secuencia y «Empezar desde cero». Antes decía «1 Ecos».
+- **Diseño adaptable**: la cuadrícula de portales se ajusta al alto disponible (escala entera máx. 2×) y el lienzo del detalle usa una escala entera limitada por ancho y alto.
+
+#### Balance y decisiones (tiempos simulados con `node tools/balance.js`)
+- **Objetivos de diseño:** primera refundación en 35–60 min con al menos un talento; castillo descubrible en el primer ciclo; cavernas en el segundo.
+- **Tiempos simulados**, v0.2 → v0.3:
+
+  | Hito | v0.2 | v0.3 |
+  |---|---|---|
+  | Jungla | 5:20 | 5:20 |
+  | Cripta | 11:40 | 11:20 |
+  | Castillo | — | 20:40 |
+  | 10 deshielos | — | 23:43 |
+  | Primera refundación | 39:36 | 34:55 (6 Ecos: 3 + 3 de hazañas) |
+  | Ciclo 2 con Báculos heredados | 33:16 | 29:21 (cavernas 19:03) |
+  | Ciclo 2 con Cielo Recordado | 33:43 | 30:03 (cavernas 21:03) |
+
+  34:55 queda 5 s bajo el objetivo. Con 6 Ecos alcanzan 1–3 talentos: Báculos heredados, Cielo y Semilla.
+- **Curva de Ecos:** √ idéntica a v0.2 hasta 12 Ecos, para no quitar Ecos a partidas migradas cercanas a su siguiente recompensa. Desde ahí se suman +3 por cada duplicación del total.
+  - **Tope de madurez:** máx(1, ⌊duración del ciclo / 4 min⌋) Ecos base. El ciclo migrado queda exento (`flags.legacyCycle`).
+  - Sin esto, el perfil activo superaba los 1000 Ecos en 48 h.
+- **Ecos por hora (ciclo 2):** corto (refundar en 29:21) 7 Ecos = **14,3/h**; profundo (30 miradas, 34:07) 10 Ecos = **17,6/h**. Profundizar rinde algo más sin castigar el ciclo corto.
+- **Perfiles de 48 h:**
+  - **Breve** (4 × 12 min/día, recoge offline): 1 h 36 min activo, 4 refundaciones, 88 Ecos. Compra Báculos, Cielo, Semilla, Campanas ×2, Velo, Cometa ×3, Forja y Pacto ×2. Quedan Campanas, Velo, Cometa, Pacto y Reliquias.
+  - **Activo** (2 × 60 + 2 × 25 min/día): 5 h 40 min activo, 17 refundaciones, 230 Ecos. Compra todos los talentos (Campanas ×4, Velo ×3, Cometa ×4, Pacto ×3, Reliquias ×2). Quedan los niveles repetibles de Campanas, Velo, Cometa y Reliquias.
+- **Decisiones de compra (cálculo real de la compra, misma partida)**, v0.2 → v0.3:
+  - **A) Báculo Nv 47 → 50** (×3, 56,7 K): +10,2 % → **+12,5 %** del bosque. Un solo nivel: +0,10 % → +0,12 %. El salto del Nv 50 se anuncia en la vista previa.
+  - **B) Báculo Nv 31 con 159,7 K** (lo que cuesta 1 nivel de Lluvia): báculo hasta Nv 50 +13,1 % → **+15,7 %**; Lluvia ×1 +5,1 % (igual); Prisma 1,3 % → 0,8 %. El Prisma era una trampa barata: coste base 900, crecimiento ×1,4 y +1,5 %/nivel.
+  - **C) Túnica de Corteza ×10** (Nv 30, 558,5 K): +0,22 % → **+1,35 %** de la jungla. Ahora las túnicas suman +0,5 % del foco por nivel (`robeFocusShare` 0,005); antes eran casi inútiles.
+- **Tramos muertos de ×10** (`--tramos`): 12 → 10. Los que quedan son esperas deliberadas por compras grandes (Polen, Confluencia), y mientras tanto queda la Túnica u Órbita con +0,2–0,6 %.
+- **Otros ajustes:**
+  - Polen: crecimiento ×1,85.
+  - Castillo: grietas a ritmo fijo de 3 s → 1 s (antes llegaba a 0,03 s).
+  - Cénit: lineal +0,15 (llegaba a ×153).
+  - Apertura del castillo: cripta 15 K/s.
+- **Tiempos observados jugando:** todavía no hay.
+
+#### Migración v0.2 → v0.3 (`saveVersion` 3, migración 2)
+- Antes de migrar se guarda una **copia recuperable** (`respaldo-v2`, exportable desde Partida). La ruta v0.1 → v0.2 → v0.3 se conserva.
+- Se añaden castillo, cavernas, Réquiem, talentos nuevos, registros y hazañas en cero. **Sin ingresos retroactivos** para las zonas nuevas: producen desde que se abren.
+- Registros deducidos de forma conservadora: solo `spellMax` (desde la Lluvia actual). Deshielos y miradas no se inventan.
+- Las refundaciones previas cuentan para abrir las cavernas. Una partida avanzada puede abrir el castillo enseguida si su cripta ya supera 15 K/s.
+- El ciclo migrado no sufre el tope de madurez (`legacyCycle`): conserva los Ecos que tenía a la vista.
+- Exportar e importar, y «Empezar desde cero», siguen funcionando.
+
+#### Verificación
+- **Prueba de lógica** (`node tests/logic.test.js`): **178/178** tras las últimas ediciones. Cubre:
+  - 8 entradas por zona en las 5 zonas;
+  - castillo y cavernas: activo = offline y recarga a mitad de ciclo;
+  - Réquiem sin retroalimentación;
+  - curva de Ecos idéntica a v0.2 hasta 12, cola, madurez y hazañas con ciclo mínimo;
+  - requisitos y costes de los talentos avanzados;
+  - Reliquias fuera del maná generado;
+  - refundación aplicada una sola vez;
+  - migración con los fixtures reales v0.1 y v0.2 (`v02-avanzada`), incluida una partida cerca de su siguiente Eco;
+  - balance dentro de los objetivos.
+- **Prueba en navegador real** (Chrome headless sobre `file://`): **66/66**, con tres recargas reales: a mitad de la refundación, migración v0.2 y migración v0.1. Cubre:
+  - pestañas Portales/Mesa con teclado;
+  - compra de mejoras y talentos desde la Mesa;
+  - confirmación Ganarás/Perderás/Conservarás;
+  - omitir, doble clic y recarga sin duplicar la recompensa;
+  - castillo y cavernas;
+  - «Empezar desde cero».
+- **Capturas revisadas a mano:**
+  - hoja de jefes (reposo, impacto, insignia, derrota 50 %/100 % y portal, por jefe);
+  - hoja de fases de los hechizos insignia;
+  - Sala con 5 zonas en pantalla baja, Mesa, tienda, detalle, confirmación y secuencia de refundación;
+  - 360 px (`tests/movil.html`).
+- **Responsive** (`--responsive`): viewports efectivos 1258×588, 1344×636, 1514×732 y 1898×948, y zoom 125 % emulado con 1207×559. Ninguno tiene scroll horizontal.
+  - Portales a 2×: 2 columnas en 1280 y 1366, 3 en tamaños mayores.
+  - Detalle a 512 px en notebook y 768 px en escritorio.
+  - El zoom 125 % se emula con el viewport CSS equivalente, no con el zoom del navegador.
+- **Sin comprobar:**
+  - fluidez real (los cuadros se fuerzan desde la prueba);
+  - Edge, Firefox y un móvil real;
+  - tiempos jugando de verdad.
+  - Detalle menor: en la captura de la confirmación, la cabecera fija aparecía algo desplazada tras `scrollIntoView`.
+
+#### Pendientes conocidos
+- El perfil activo agota casi todos los talentos en 48 h. Solo quedan niveles repetibles: falta contenido de largo plazo.
+- Quedan 10 tramos de espera por compras grandes (Polen, Confluencia).
+- La primera refundación simulada (34:55) roza el límite inferior del objetivo. Conviene confirmarla con tiempos observados.
 
 ## v0.2.0 — 2026-11-20 — Cerrada
 
